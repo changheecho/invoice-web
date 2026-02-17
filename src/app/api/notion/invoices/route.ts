@@ -10,7 +10,7 @@
 import { NextResponse } from 'next/server'
 import { notionClient } from '@/lib/notion/client'
 import { transformToInvoiceSummary } from '@/lib/notion/transform'
-import { NOTION_DATABASE_ID } from '@/lib/env'
+import { NOTION_DATABASE_ID, validateEnv } from '@/lib/env'
 import type { InvoiceSummary, ApiResponse } from '@/types'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 
@@ -22,6 +22,19 @@ import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoint
  * @returns 500 - Notion API 오류 또는 환경 변수 미설정
  */
 export async function GET() {
+  // 필수 환경 변수 검증 (Fail-Fast 패턴)
+  const missingEnv = validateEnv()
+  if (missingEnv.length > 0) {
+    return NextResponse.json<ApiResponse<never>>(
+      {
+        success: false,
+        error: '서버 설정 오류',
+        details: `누락된 환경 변수: ${missingEnv.join(', ')}`,
+      },
+      { status: 500 }
+    )
+  }
+
   // 환경 변수 유효성 검사
   if (!NOTION_DATABASE_ID) {
     return NextResponse.json<ApiResponse<never>>(
