@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server'
 import { notionClient } from '@/lib/notion/client'
 import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
 import { getInvoiceItems } from '@/lib/notion/items'
+import { createServerClient } from '@/lib/supabase/server'
 import type { Invoice, ApiResponse } from '@/types'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 
@@ -35,6 +36,16 @@ export async function GET(
     return NextResponse.json<ApiResponse<never>>(
       { success: false, error: '견적서 ID가 필요합니다.' },
       { status: 400 }
+    )
+  }
+
+  // 관리자 인증 검증
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json<ApiResponse<never>>(
+      { success: false, error: '인증이 필요합니다.' },
+      { status: 401 }
     )
   }
 

@@ -11,6 +11,7 @@ import { NextResponse } from 'next/server'
 import { notionClient } from '@/lib/notion/client'
 import { transformToInvoiceSummary } from '@/lib/notion/transform'
 import { NOTION_DATABASE_ID, validateEnv } from '@/lib/env'
+import { createServerClient } from '@/lib/supabase/server'
 import type { InvoiceSummary, ApiResponse } from '@/types'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 
@@ -44,6 +45,16 @@ export async function GET() {
         details: 'NOTION_DATABASE_ID가 설정되지 않았습니다.',
       },
       { status: 500 }
+    )
+  }
+
+  // 관리자 인증 검증
+  const supabase = await createServerClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return NextResponse.json<ApiResponse<never>>(
+      { success: false, error: '인증이 필요합니다.' },
+      { status: 401 }
     )
   }
 
