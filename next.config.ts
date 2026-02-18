@@ -42,6 +42,21 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // Tree-shaking 강화: 사용된 아이콘/컴포넌트만 번들에 포함
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      '@radix-ui/react-label',
+      '@radix-ui/react-popover',
+      '@radix-ui/react-separator',
+      '@radix-ui/react-slot',
+      '@radix-ui/react-tooltip',
+    ],
+  },
+  // @react-pdf/renderer는 서버 전용 (클라이언트 번들 제외)
+  serverExternalPackages: ['@react-pdf/renderer'],
 };
 
 export default nextConfig;

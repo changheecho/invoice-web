@@ -25,7 +25,11 @@ import { InvoiceStatusBadge } from '@/components/invoice/InvoiceStatusBadge'
 import { InvoiceTableSkeleton } from '@/components/invoice/InvoiceSkeleton'
 import { DashboardSearchFilter } from './components/DashboardSearchFilter'
 import { ROUTES } from '@/lib/constants'
+import { notionClient } from '@/lib/notion/client'
+import { transformToInvoiceSummary } from '@/lib/notion/transform'
+import { NOTION_DATABASE_ID } from '@/lib/env'
 import type { InvoiceSummary } from '@/types'
+import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 
 /**
  * 페이지 메타데이터
@@ -44,62 +48,6 @@ interface DashboardPageProps {
     status?: string
   }>
 }
-
-// ============================================================
-// 목업 데이터 (Stage 3-2에서 실제 API 연동 시 제거 예정)
-// ============================================================
-
-/**
- * UI 마크업 검증용 목업 견적서 데이터
- * 실제 데이터 페칭은 Stage 3-2에서 /api/notion/invoices 연동으로 교체됩니다.
- */
-const MOCK_INVOICES: InvoiceSummary[] = [
-  {
-    id: 'mock-001',
-    title: '견적서-2026-001',
-    clientName: '(주)스타트업 코리아',
-    invoiceDate: '2026-02-15',
-    dueDate: '2026-03-15',
-    status: 'sent',
-    totalAmount: 4500000,
-  },
-  {
-    id: 'mock-002',
-    title: '견적서-2026-002',
-    clientName: '테크놀로지 파트너스',
-    invoiceDate: '2026-02-10',
-    dueDate: '2026-03-10',
-    status: 'confirmed',
-    totalAmount: 12000000,
-  },
-  {
-    id: 'mock-003',
-    title: '견적서-2026-003',
-    clientName: '글로벌 솔루션즈',
-    invoiceDate: '2026-02-08',
-    dueDate: null,
-    status: 'draft',
-    totalAmount: 750000,
-  },
-  {
-    id: 'mock-004',
-    title: '견적서-2026-004',
-    clientName: '디지털 에이전시',
-    invoiceDate: '2026-01-30',
-    dueDate: '2026-02-28',
-    status: 'completed',
-    totalAmount: 8900000,
-  },
-  {
-    id: 'mock-005',
-    title: '견적서-2026-005',
-    clientName: '신규 클라이언트',
-    invoiceDate: '2026-02-18',
-    dueDate: '2026-03-18',
-    status: 'pending',
-    totalAmount: 2200000,
-  },
-]
 
 // ============================================================
 // 유틸리티 함수
@@ -249,48 +197,45 @@ const EmptyState = () => (
  * Notion 데이터베이스에서 실시간으로 견적서 목록을 조회합니다.
  */
 const InvoiceTableBody = async () => {
+  // 데이터 조회를 try/catch로 감싸고, JSX 구성은 외부에서 처리
+  let invoices: InvoiceSummary[] = []
+  let hasError = false
+
   try {
-    // Notion API에서 견적서 목록 조회 (상대 경로 사용, 서버 컴포넌트에서 자동으로 처리)
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/notion/invoices`, {
-      cache: 'no-store',
+    // Notion 데이터 소스 쿼리 (네트워크 왕복 제거, 직접 호출)
+    const response = await notionClient.dataSources.query({
+      data_source_id: NOTION_DATABASE_ID,
+      sorts: [
+        {
+          property: '발행일',
+          direction: 'descending',
+        },
+      ],
     })
 
-    if (!response.ok) {
-      throw new Error(`API 오류: ${response.status}`)
-    }
-
-    const result = await response.json()
-
-    // API 응답 검증
-    if (!result.success || !Array.isArray(result.data)) {
-      throw new Error(result.error || '데이터 형식이 올바르지 않습니다.')
-    }
-
-    const invoices: InvoiceSummary[] = result.data
-
-    if (invoices.length === 0) {
-      return <EmptyState />
-    }
-
-    return (
-      <TableBody>
-        {invoices.map((invoice) => (
-          <InvoiceTableRow key={invoice.id} invoice={invoice} />
-        ))}
-      </TableBody>
-    )
+    // Notion 페이지 객체를 InvoiceSummary 타입으로 변환
+    invoices = (response.results as unknown[])
+      .filter((page): page is PageObjectResponse => {
+        return typeof page === 'object' && page !== null && 'properties' in page
+      })
+      .map(transformToInvoiceSummary)
   } catch (error) {
     console.error('[대시보드] 견적서 조회 오류:', error)
-
-    // 오류 발생 시 목업 데이터로 폴백
-    return (
-      <TableBody>
-        {MOCK_INVOICES.map((invoice) => (
-          <InvoiceTableRow key={invoice.id} invoice={invoice} />
-        ))}
-      </TableBody>
-    )
+    hasError = true
   }
+
+  // 에러 발생 또는 데이터가 없으면 빈 상태 표시
+  if (hasError || invoices.length === 0) {
+    return <EmptyState />
+  }
+
+  return (
+    <TableBody>
+      {invoices.map((invoice) => (
+        <InvoiceTableRow key={invoice.id} invoice={invoice} />
+      ))}
+    </TableBody>
+  )
 }
 
 // ============================================================
@@ -436,15 +381,6 @@ export default async function DashboardPage(_props: DashboardPageProps) {
           테이블 하단 정보 (총 건수 표시 영역)
           ==================================================== */}
       <div className="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-        {/* 총 견적서 건수 - Stage 3-2에서 실제 건수로 교체 */}
-        <p aria-live="polite">
-          총{' '}
-          <span className="font-medium text-foreground">
-            {MOCK_INVOICES.length}
-          </span>
-          건의 견적서
-        </p>
-
         {/* 데이터 출처 안내 */}
         <div className="flex items-center gap-1.5">
           <FileText className="h-3 w-3" aria-hidden="true" />
