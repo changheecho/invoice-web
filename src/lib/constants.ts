@@ -51,6 +51,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
  * const label = INVOICE_STATUS_LABELS['sent'] // '발송됨'
  */
 export const INVOICE_STATUS_LABELS: Record<InvoiceStatus, string> = {
+  pending: '대기',
   draft: '초안',
   sent: '발송됨',
   confirmed: '확인됨',
@@ -68,6 +69,7 @@ export const INVOICE_STATUS_VARIANTS: Record<
   InvoiceStatus,
   'default' | 'secondary' | 'destructive' | 'outline'
 > = {
+  pending: 'secondary',
   draft: 'outline',
   sent: 'secondary',
   confirmed: 'default',

@@ -48,14 +48,13 @@ export async function GET() {
   }
 
   try {
-    // Notion 데이터소스 쿼리 (견적 일자 기준 내림차순 정렬)
-    // @note @notionhq/client v5에서 databases.query → dataSources.query로 변경됨
-    //       파라미터도 database_id → data_source_id로 변경됨
+    // Notion 데이터 소스 쿼리 (발행일 기준 내림차순 정렬)
+    // @notionhq/client v5에서는 dataSources.query를 사용합니다.
     const response = await notionClient.dataSources.query({
       data_source_id: NOTION_DATABASE_ID,
       sorts: [
         {
-          property: 'Invoice Date',
+          property: '발행일',
           direction: 'descending',
         },
       ],

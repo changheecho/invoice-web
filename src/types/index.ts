@@ -49,13 +49,14 @@ export interface Invoice {
 
 /**
  * 견적서 상태 유니온 타입
+ * - pending: 대기
  * - draft: 초안
  * - sent: 발송됨
  * - confirmed: 확인됨
  * - completed: 완료
  * - cancelled: 취소됨
  */
-export type InvoiceStatus = 'draft' | 'sent' | 'confirmed' | 'completed' | 'cancelled'
+export type InvoiceStatus = 'pending' | 'draft' | 'sent' | 'confirmed' | 'completed' | 'cancelled'
 
 /**
  * 견적서 목록 조회 시 반환되는 요약 데이터 (상세 항목 제외)

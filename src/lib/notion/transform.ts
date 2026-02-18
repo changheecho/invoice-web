@@ -78,6 +78,20 @@ function extractSelect(
 }
 
 /**
+ * Notion relation 프로퍼티에서 페이지 ID 배열을 추출합니다.
+ * Items DB와 같은 관계형 데이터 조회에 사용됩니다.
+ *
+ * @param property - Notion relation 타입 프로퍼티
+ * @returns 페이지 ID 배열 (없으면 빈 배열)
+ */
+function extractRelationIds(
+  property: PageObjectResponse['properties'][string]
+): string[] {
+  if (!property || property.type !== 'relation') return []
+  return property.relation.map((r: { id: string }) => r.id) || []
+}
+
+/**
  * Notion select 값을 InvoiceStatus 타입으로 변환합니다.
  * 알 수 없는 값은 'draft'로 폴백합니다.
  *
@@ -86,6 +100,8 @@ function extractSelect(
  */
 function parseStatus(value: string): InvoiceStatus {
   const statusMap: Record<string, InvoiceStatus> = {
+    '대기': 'pending',
+    'pending': 'pending',
     '초안': 'draft',
     'draft': 'draft',
     '발송됨': 'sent',
@@ -114,10 +130,10 @@ export function transformToInvoiceSummary(
 
   return {
     id: page.id,
-    title: extractText(props['Title'] || props['제목']),
-    clientName: extractText(props['Client Name'] || props['클라이언트명']),
-    invoiceDate: extractDate(props['Invoice Date'] || props['견적 일자']) || '',
-    dueDate: extractDate(props['Due Date'] || props['만료일']),
+    title: extractText(props['Title'] || props['제목'] || props['견적서 번호']),
+    clientName: (extractText(props['Client Name'] || props['클라이언트명']) || '').trim(),
+    invoiceDate: extractDate(props['Invoice Date'] || props['견적 일자'] || props['발행일']) || '',
+    dueDate: extractDate(props['Due Date'] || props['만료일'] || props['유효기간']),
     status: parseStatus(
       extractSelect(props['Status'] || props['상태'])
     ),
@@ -129,31 +145,37 @@ export function transformToInvoiceSummary(
  * Notion 페이지 객체를 Invoice 타입으로 변환합니다.
  * 견적서 상세 페이지에 사용됩니다.
  *
- * @note 현재 Items 필드는 rich_text에서 JSON으로 파싱합니다.
- *       별도 Relation DB 연동 시 이 함수를 확장하세요.
+ * @note Items 필드는 Notion의 Relation 타입입니다.
+ *       실제 Items 데이터 조회는 API Route에서 별도로 처리합니다.
+ *       이 함수에서는 Items Relation ID 배열만 반환합니다.
  *
  * @param page - Notion API에서 반환된 페이지 객체
- * @returns Invoice 타입 데이터
+ * @returns Invoice 타입 데이터 (items는 빈 배열로 기본값)
  */
 export function transformToInvoice(page: PageObjectResponse): Invoice {
   const summary = transformToInvoiceSummary(page)
   const props = page.properties
 
-  // Items 필드: JSON 형식의 rich_text에서 파싱 (기본 빈 배열)
-  let items: InvoiceItem[] = []
-  try {
-    const itemsRaw = extractText(props['Items'] || props['항목'])
-    if (itemsRaw) {
-      items = JSON.parse(itemsRaw) as InvoiceItem[]
-    }
-  } catch {
-    // JSON 파싱 실패 시 빈 배열로 폴백
-    items = []
-  }
+  // Items 필드: Relation 타입에서 ID 배열 추출
+  // 실제 Item 데이터는 API Route에서 별도 조회
+  // (현재는 빈 배열로 설정, 실제 items는 API Route에서 조회 후 채움)
+  const items: InvoiceItem[] = []
 
   return {
     ...summary,
     items,
     notes: extractText(props['Notes'] || props['메모']) || null,
   }
+}
+
+/**
+ * Items Relation ID 배열을 반환합니다.
+ * API Route에서 Items를 조회할 때 사용합니다.
+ *
+ * @param page - Notion 페이지 객체
+ * @returns Items Relation ID 배열
+ */
+export function extractItemIds(page: PageObjectResponse): string[] {
+  const props = page.properties
+  return extractRelationIds(props['Items'] || props['항목'])
 }

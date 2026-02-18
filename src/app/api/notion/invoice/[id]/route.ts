@@ -2,6 +2,7 @@
  * API Route: GET /api/notion/invoice/[id]
  *
  * Notion에서 특정 견적서의 상세 데이터를 조회합니다.
+ * Items Relation을 따라 실제 라인 아이템 데이터도 함께 조회합니다.
  * 관리자용 견적서 상세 페이지 및 공개 견적서 페이지에서 사용됩니다.
  *
  * @param params.id - Notion 페이지 ID
@@ -10,7 +11,8 @@
  */
 import { NextResponse } from 'next/server'
 import { notionClient } from '@/lib/notion/client'
-import { transformToInvoice } from '@/lib/notion/transform'
+import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
+import { getInvoiceItems } from '@/lib/notion/items'
 import type { Invoice, ApiResponse } from '@/types'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 
@@ -48,8 +50,15 @@ export async function GET(
       )
     }
 
-    // Invoice 타입으로 변환
-    const invoice: Invoice = transformToInvoice(page as PageObjectResponse)
+    // Invoice 타입으로 변환 (이 시점에서는 items가 빈 배열)
+    let invoice: Invoice = transformToInvoice(page as PageObjectResponse)
+
+    // Items Relation ID 추출 및 실제 Items 조회
+    const itemIds = extractItemIds(page as PageObjectResponse)
+    if (itemIds.length > 0) {
+      const items = await getInvoiceItems(itemIds)
+      invoice = { ...invoice, items }
+    }
 
     return NextResponse.json<ApiResponse<Invoice>>({
       success: true,
