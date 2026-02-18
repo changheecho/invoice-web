@@ -1,0 +1,18 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - generic [ref=e5]: Invoice Web
+      - generic [ref=e6]: 관리자 계정으로 로그인하세요
+    - generic [ref=e8]:
+      - generic [ref=e9]:
+        - generic [ref=e10]: 이메일
+        - textbox "이메일" [ref=e11]:
+          - /placeholder: admin@example.com
+      - generic [ref=e12]:
+        - generic [ref=e13]: 비밀번호
+        - textbox "비밀번호" [ref=e14]:
+          - /placeholder: ••••••••
+      - button "로그인" [ref=e15]
+  - button "Open Next.js Dev Tools" [ref=e21] [cursor=pointer]:
+    - img [ref=e22]
+  - alert [ref=e25]

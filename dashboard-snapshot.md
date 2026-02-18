@@ -1,0 +1,132 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e3]:
+      - generic [ref=e4]:
+        - link "Invoice Web" [ref=e5] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e6]
+          - generic [ref=e9]: Invoice Web
+        - button "로그아웃" [ref=e10]:
+          - img
+          - text: 로그아웃
+    - main [ref=e11]:
+      - region "견적서 대시보드" [ref=e12]:
+        - generic [ref=e13]:
+          - generic [ref=e14]:
+            - heading "견적서 대시보드" [level=1] [ref=e15]
+            - paragraph [ref=e16]: Notion 데이터베이스에서 견적서를 조회하고 클라이언트와 공유합니다.
+          - button "Notion 데이터 새로고침" [ref=e17]:
+            - img
+            - generic [ref=e18]: 새로고침
+        - search "견적서 검색 및 필터" [ref=e20]:
+          - generic [ref=e21]:
+            - img
+            - searchbox "클라이언트명으로 검색" [ref=e22]
+          - combobox "상태 필터 선택" [ref=e23]:
+            - generic: 모든 상태
+            - img
+        - region "견적서 목록" [ref=e24]:
+          - table "견적서 목록 테이블" [ref=e26]:
+            - rowgroup [ref=e27]:
+              - row "제목 클라이언트 총 금액 견적 일자 상태 액션" [ref=e28]:
+                - columnheader "제목" [ref=e29]
+                - columnheader "클라이언트" [ref=e30]
+                - columnheader "총 금액" [ref=e31]
+                - columnheader "견적 일자" [ref=e32]
+                - columnheader "상태" [ref=e33]
+                - columnheader "액션" [ref=e34]:
+                  - generic [ref=e35]: 액션
+            - rowgroup [ref=e36]:
+              - 'row "견적서-2026-001 상세 페이지로 이동 (주)스타트업 코리아 4,500,000원 2026-02-15 견적서 상태: 발송됨 (주)스타트업 코리아 견적서 공유 링크 복사 (주)스타트업 코리아 견적서 상세보기" [ref=e37]':
+                - cell "견적서-2026-001 상세 페이지로 이동" [ref=e38]:
+                  - link "견적서-2026-001 상세 페이지로 이동" [ref=e39] [cursor=pointer]:
+                    - /url: /dashboard/invoice/mock-001
+                    - text: 견적서-2026-001
+                - cell "(주)스타트업 코리아" [ref=e40]
+                - cell "4,500,000원" [ref=e41]
+                - cell "2026-02-15" [ref=e42]
+                - 'cell "견적서 상태: 발송됨" [ref=e43]':
+                  - 'generic "견적서 상태: 발송됨" [ref=e44]': 발송됨
+                - cell "(주)스타트업 코리아 견적서 공유 링크 복사 (주)스타트업 코리아 견적서 상세보기" [ref=e45]:
+                  - generic [ref=e46]:
+                    - button "(주)스타트업 코리아 견적서 공유 링크 복사" [ref=e47]:
+                      - img
+                    - link "(주)스타트업 코리아 견적서 상세보기" [ref=e48] [cursor=pointer]:
+                      - /url: /dashboard/invoice/mock-001
+                      - img
+              - 'row "견적서-2026-002 상세 페이지로 이동 테크놀로지 파트너스 12,000,000원 2026-02-10 견적서 상태: 확인됨 테크놀로지 파트너스 견적서 공유 링크 복사 테크놀로지 파트너스 견적서 상세보기" [ref=e49]':
+                - cell "견적서-2026-002 상세 페이지로 이동" [ref=e50]:
+                  - link "견적서-2026-002 상세 페이지로 이동" [ref=e51] [cursor=pointer]:
+                    - /url: /dashboard/invoice/mock-002
+                    - text: 견적서-2026-002
+                - cell "테크놀로지 파트너스" [ref=e52]
+                - cell "12,000,000원" [ref=e53]
+                - cell "2026-02-10" [ref=e54]
+                - 'cell "견적서 상태: 확인됨" [ref=e55]':
+                  - 'generic "견적서 상태: 확인됨" [ref=e56]': 확인됨
+                - cell "테크놀로지 파트너스 견적서 공유 링크 복사 테크놀로지 파트너스 견적서 상세보기" [ref=e57]:
+                  - generic [ref=e58]:
+                    - button "테크놀로지 파트너스 견적서 공유 링크 복사" [ref=e59]:
+                      - img
+                    - link "테크놀로지 파트너스 견적서 상세보기" [ref=e60] [cursor=pointer]:
+                      - /url: /dashboard/invoice/mock-002
+                      - img
+              - 'row "견적서-2026-003 상세 페이지로 이동 글로벌 솔루션즈 750,000원 2026-02-08 견적서 상태: 초안 글로벌 솔루션즈 견적서 공유 링크 복사 글로벌 솔루션즈 견적서 상세보기" [ref=e61]':
+                - cell "견적서-2026-003 상세 페이지로 이동" [ref=e62]:
+                  - link "견적서-2026-003 상세 페이지로 이동" [ref=e63] [cursor=pointer]:
+                    - /url: /dashboard/invoice/mock-003
+                    - text: 견적서-2026-003
+                - cell "글로벌 솔루션즈" [ref=e64]
+                - cell "750,000원" [ref=e65]
+                - cell "2026-02-08" [ref=e66]
+                - 'cell "견적서 상태: 초안" [ref=e67]':
+                  - 'generic "견적서 상태: 초안" [ref=e68]': 초안
+                - cell "글로벌 솔루션즈 견적서 공유 링크 복사 글로벌 솔루션즈 견적서 상세보기" [ref=e69]:
+                  - generic [ref=e70]:
+                    - button "글로벌 솔루션즈 견적서 공유 링크 복사" [ref=e71]:
+                      - img
+                    - link "글로벌 솔루션즈 견적서 상세보기" [ref=e72] [cursor=pointer]:
+                      - /url: /dashboard/invoice/mock-003
+                      - img
+              - 'row "견적서-2026-004 상세 페이지로 이동 디지털 에이전시 8,900,000원 2026-01-30 견적서 상태: 완료 디지털 에이전시 견적서 공유 링크 복사 디지털 에이전시 견적서 상세보기" [ref=e73]':
+                - cell "견적서-2026-004 상세 페이지로 이동" [ref=e74]:
+                  - link "견적서-2026-004 상세 페이지로 이동" [ref=e75] [cursor=pointer]:
+                    - /url: /dashboard/invoice/mock-004
+                    - text: 견적서-2026-004
+                - cell "디지털 에이전시" [ref=e76]
+                - cell "8,900,000원" [ref=e77]
+                - cell "2026-01-30" [ref=e78]
+                - 'cell "견적서 상태: 완료" [ref=e79]':
+                  - 'generic "견적서 상태: 완료" [ref=e80]': 완료
+                - cell "디지털 에이전시 견적서 공유 링크 복사 디지털 에이전시 견적서 상세보기" [ref=e81]:
+                  - generic [ref=e82]:
+                    - button "디지털 에이전시 견적서 공유 링크 복사" [ref=e83]:
+                      - img
+                    - link "디지털 에이전시 견적서 상세보기" [ref=e84] [cursor=pointer]:
+                      - /url: /dashboard/invoice/mock-004
+                      - img
+              - 'row "견적서-2026-005 상세 페이지로 이동 신규 클라이언트 2,200,000원 2026-02-18 견적서 상태: 대기 신규 클라이언트 견적서 공유 링크 복사 신규 클라이언트 견적서 상세보기" [ref=e85]':
+                - cell "견적서-2026-005 상세 페이지로 이동" [ref=e86]:
+                  - link "견적서-2026-005 상세 페이지로 이동" [ref=e87] [cursor=pointer]:
+                    - /url: /dashboard/invoice/mock-005
+                    - text: 견적서-2026-005
+                - cell "신규 클라이언트" [ref=e88]
+                - cell "2,200,000원" [ref=e89]
+                - cell "2026-02-18" [ref=e90]
+                - 'cell "견적서 상태: 대기" [ref=e91]':
+                  - 'generic "견적서 상태: 대기" [ref=e92]': 대기
+                - cell "신규 클라이언트 견적서 공유 링크 복사 신규 클라이언트 견적서 상세보기" [ref=e93]:
+                  - generic [ref=e94]:
+                    - button "신규 클라이언트 견적서 공유 링크 복사" [ref=e95]:
+                      - img
+                    - link "신규 클라이언트 견적서 상세보기" [ref=e96] [cursor=pointer]:
+                      - /url: /dashboard/invoice/mock-005
+                      - img
+        - generic [ref=e97]:
+          - paragraph [ref=e98]: 총 5건의 견적서
+          - generic [ref=e99]:
+            - img [ref=e100]
+            - generic [ref=e103]: Notion 데이터베이스 연동
+  - button "Open Next.js Dev Tools" [ref=e110] [cursor=pointer]:
+    - img [ref=e111]
+  - alert [ref=e104]

@@ -11,6 +11,7 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { LogOut, FileText } from 'lucide-react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
 import { ROUTES } from '@/lib/constants'
@@ -27,10 +28,16 @@ export function DashboardHeader() {
    * Supabase Auth 세션을 종료하고 로그인 페이지로 이동합니다.
    */
   const handleSignOut = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push(ROUTES.LOGIN)
-    router.refresh()
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      toast.success('로그아웃되었습니다')
+      router.push(ROUTES.LOGIN)
+      router.refresh()
+    } catch (error) {
+      toast.error('로그아웃 실패했습니다')
+      console.error('[로그아웃] 실패:', error)
+    }
   }
 
   return (

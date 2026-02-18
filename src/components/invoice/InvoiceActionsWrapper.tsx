@@ -30,6 +30,7 @@
  */
 
 import { useState, useCallback } from 'react'
+import { toast } from 'sonner'
 import { InvoiceActions } from '@/components/invoice/InvoiceActions'
 
 /**
@@ -91,6 +92,10 @@ export const InvoiceActionsWrapper = ({
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      toast.success('PDF 다운로드가 시작되었습니다')
+    } catch (error) {
+      toast.error('PDF 다운로드 실패했습니다')
+      console.error('[PDF 다운로드] 실패:', error)
     } finally {
       setIsLoading(false)
     }
@@ -132,11 +137,13 @@ export const InvoiceActionsWrapper = ({
       const urlToCopy = finalShareUrl ?? window.location.href
       await navigator.clipboard.writeText(urlToCopy)
       setIsShared(true)
+      toast.success('공유 링크가 클립보드에 복사되었습니다')
 
       // 2초 후 복사 완료 상태 초기화
       setTimeout(() => setIsShared(false), 2000)
     } catch (error) {
       // 클립보드 API 미지원 환경 폴백 처리
+      toast.error('공유 링크 복사에 실패했습니다')
       console.error('[공유 링크] 복사 실패:', error)
     } finally {
       setIsGeneratingShareLink(false)

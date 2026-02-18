@@ -3,24 +3,27 @@
  *
  * 공유 링크(shareId)로 접근하는 비로그인 공개 페이지입니다.
  * shareId → notionPageId 매핑을 Supabase에서 조회한 후,
- * Notion API에서 견적서 데이터를 가져와 렌더링합니다.
+ * Notion API에서 견적서 데이터를 가져와 InvoiceViewer로 렌더링합니다.
  *
  * @param params.shareId - 공개 공유 링크 ID (URL 파라미터)
  *
  * @public 인증 불필요. 유효하지 않은 shareId는 404 처리됩니다.
  */
+import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { Download } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { getShareLinkByShareId } from '@/lib/supabase/share-links'
 import { notionClient } from '@/lib/notion/client'
 import { transformToInvoice } from '@/lib/notion/transform'
-import { INVOICE_STATUS_LABELS, CURRENCY_FORMAT } from '@/lib/constants'
+import { buildPdfFilename } from '@/lib/constants'
+import { InvoiceViewer } from '@/components/invoice/InvoiceViewer'
+import { InvoiceActionsWrapper } from '@/components/invoice/InvoiceActionsWrapper'
+import { Skeleton } from '@/components/ui/skeleton'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 
 /**
  * 동적 메타데이터 생성
+ * 견적서 제목 및 클라이언트명을 페이지 타이틀에 반영합니다.
  */
 export async function generateMetadata(
   { params }: { params: Promise<{ shareId: string }> }
@@ -49,8 +52,115 @@ export async function generateMetadata(
   return { title: '견적서 | Invoice Web' }
 }
 
+// ============================================================
+// 로딩 스켈레톤 (InvoiceViewer 형태에 맞춘 플레이스홀더)
+// ============================================================
+
+/**
+ * 견적서 뷰어 로딩 스켈레톤
+ * InvoiceViewer가 로딩될 때 동일한 레이아웃 구조로 표시됩니다.
+ */
+function InvoiceViewerSkeleton() {
+  return (
+    <div
+      aria-busy="true"
+      aria-label="견적서 로딩 중"
+      className="w-full bg-white dark:bg-slate-950 border border-border rounded-xl shadow-sm overflow-hidden"
+    >
+      {/* 헤더 스켈레톤 */}
+      <div className="flex items-start justify-between gap-4 px-6 py-8 sm:px-10 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-12 w-12 rounded-lg" />
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+        </div>
+        <div className="flex flex-col items-end gap-2">
+          <Skeleton className="h-7 w-20" />
+          <Skeleton className="h-4 w-28" />
+        </div>
+      </div>
+
+      {/* 발신/수신 스켈레톤 */}
+      <div className="px-6 py-8 sm:px-10 flex flex-col gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="h-5 w-36" />
+            <Skeleton className="h-4 w-48" />
+          </div>
+          <div className="flex flex-col gap-2 sm:items-end">
+            <Skeleton className="h-3 w-12" />
+            <Skeleton className="h-5 w-32" />
+          </div>
+        </div>
+
+        {/* 구분선 */}
+        <Skeleton className="h-px w-full" />
+
+        {/* 메타 정보 스켈레톤 */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 rounded-lg bg-muted/40 px-5 py-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-4 w-24" />
+            </div>
+          ))}
+        </div>
+
+        {/* 테이블 스켈레톤 */}
+        <div className="rounded-lg border border-border overflow-hidden">
+          <div className="bg-muted/40 px-4 py-3">
+            <div className="grid grid-cols-4 gap-4">
+              {['항목명', '수량', '단가', '소계'].map((col) => (
+                <Skeleton key={col} className="h-3 w-12" />
+              ))}
+            </div>
+          </div>
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="grid grid-cols-4 gap-4 px-4 py-3 border-t border-border">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-4 w-8 ml-auto" />
+              <Skeleton className="h-4 w-20 ml-auto" />
+              <Skeleton className="h-4 w-20 ml-auto" />
+            </div>
+          ))}
+        </div>
+
+        {/* 총 금액 스켈레톤 */}
+        <div className="flex justify-end">
+          <div className="flex flex-col gap-2 min-w-[240px]">
+            <Skeleton className="h-px w-full" />
+            <div className="flex justify-between pt-1">
+              <Skeleton className="h-5 w-16" />
+              <Skeleton className="h-6 w-28" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 푸터 스켈레톤 */}
+      <div className="flex justify-between items-center px-6 py-5 sm:px-10 border-t border-border bg-muted/20">
+        <Skeleton className="h-4 w-52" />
+        <Skeleton className="h-3 w-36" />
+      </div>
+    </div>
+  )
+}
+
+// ============================================================
+// 메인 페이지 컴포넌트
+// ============================================================
+
 /**
  * 클라이언트용 공개 견적서 페이지 컴포넌트
+ *
+ * 구성:
+ * - Suspense 경계: 로딩 스켈레톤 표시
+ * - InvoiceViewer: 전문 인보이스 레이아웃
+ * - InvoiceActionsWrapper: PDF 다운로드 버튼 (공유 버튼 없음)
+ * - 하단 안내 문구
  */
 export default async function PublicInvoicePage(
   { params }: { params: Promise<{ shareId: string }> }
@@ -80,120 +190,40 @@ export default async function PublicInvoicePage(
     notFound()
   }
 
-  const statusLabel = INVOICE_STATUS_LABELS[invoice.status]
-  const pdfUrl = `/api/invoice/${shareId}/pdf`
+  // PDF 파일명 생성
+  const pdfFileName = buildPdfFilename(invoice.clientName, invoice.invoiceDate)
+
+  // 공개 페이지 URL (공유 버튼용 - 이 페이지에서는 사용 안 함)
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
+  const shareUrl = `${appUrl}/invoice/${shareId}`
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 py-8">
-      <div className="container mx-auto px-4 max-w-3xl">
-        {/* 견적서 카드 */}
-        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border p-8">
-          {/* 헤더 */}
-          <div className="flex items-start justify-between mb-8 pb-6 border-b">
-            <div>
-              <h1 className="text-2xl font-bold">견적서</h1>
-              <p className="text-muted-foreground mt-1">{invoice.title}</p>
-            </div>
-            <Button asChild size="sm">
-              <a href={pdfUrl} download>
-                <Download className="h-4 w-4 mr-2" />
-                PDF 다운로드
-              </a>
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      <div className="container mx-auto px-4 max-w-4xl py-8 sm:py-12">
 
-          {/* 기본 정보 */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8 text-sm">
-            <div>
-              <p className="text-muted-foreground mb-1">수신</p>
-              <p className="font-semibold text-base">{invoice.clientName}</p>
-            </div>
-            <div>
-              <p className="text-muted-foreground mb-1">견적 일자</p>
-              <p className="font-medium">{invoice.invoiceDate}</p>
-            </div>
-            {invoice.dueDate && (
-              <div>
-                <p className="text-muted-foreground mb-1">만료일</p>
-                <p className="font-medium">{invoice.dueDate}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-muted-foreground mb-1">상태</p>
-              <span className="inline-block px-2 py-0.5 bg-slate-100 dark:bg-slate-800 rounded text-xs font-medium">
-                {statusLabel}
-              </span>
-            </div>
-          </div>
+        {/* 견적서 뷰어 (Suspense 경계) */}
+        <Suspense fallback={<InvoiceViewerSkeleton />}>
+          <InvoiceViewer
+            invoice={invoice}
+            showActions={true}
+            actionsSlot={
+              <InvoiceActionsWrapper
+                invoiceId={invoice.id}
+                shareId={shareId}
+                showPdfButton={true}
+                showShareButton={false}
+                pdfFileName={pdfFileName}
+                shareUrl={shareUrl}
+              />
+            }
+          />
+        </Suspense>
 
-          {/* 항목 테이블 */}
-          <div className="mb-8">
-            <h2 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted-foreground">
-              견적 항목
-            </h2>
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-y bg-slate-50 dark:bg-slate-800/50 text-muted-foreground">
-                  <th className="text-left py-3 px-3">항목명</th>
-                  <th className="text-right py-3 px-3">수량</th>
-                  <th className="text-right py-3 px-3">단가</th>
-                  <th className="text-right py-3 px-3">소계</th>
-                </tr>
-              </thead>
-              <tbody>
-                {invoice.items.length > 0 ? (
-                  invoice.items.map((item, index) => (
-                    <tr key={index} className="border-b">
-                      <td className="py-3 px-3">{item.name}</td>
-                      <td className="text-right py-3 px-3">{item.quantity}</td>
-                      <td className="text-right py-3 px-3">
-                        {new Intl.NumberFormat('ko-KR', CURRENCY_FORMAT).format(
-                          item.unitPrice
-                        )}
-                      </td>
-                      <td className="text-right py-3 px-3">
-                        {new Intl.NumberFormat('ko-KR', CURRENCY_FORMAT).format(
-                          item.subtotal
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="py-6 text-center text-muted-foreground">
-                      항목 정보가 없습니다.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* 총 금액 */}
-          <div className="flex justify-end">
-            <div className="min-w-48">
-              <div className="flex justify-between items-center pt-3 border-t-2 font-bold text-lg">
-                <span>총 금액</span>
-                <span>
-                  {new Intl.NumberFormat('ko-KR', CURRENCY_FORMAT).format(
-                    invoice.totalAmount
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 메모 */}
-          {invoice.notes && (
-            <div className="mt-6 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg text-sm">
-              <p className="text-muted-foreground font-medium mb-1">메모</p>
-              <p className="text-slate-700 dark:text-slate-300">{invoice.notes}</p>
-            </div>
-          )}
-        </div>
-
-        {/* 푸터 안내 */}
-        <p className="text-center text-xs text-muted-foreground mt-6">
+        {/* 하단 안내 문구 */}
+        <p
+          className="text-center text-xs text-muted-foreground mt-6"
+          aria-label="견적서 생성 안내"
+        >
           본 견적서는 Invoice Web을 통해 공유되었습니다.
         </p>
       </div>
