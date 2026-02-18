@@ -26,20 +26,20 @@ import { INVOICE_STATUS_LABELS, CURRENCY_FORMAT } from '@/lib/constants'
 
 /**
  * Noto Sans KR 폰트 등록
- * Next.js public 디렉토리에 폰트 파일을 위치시키거나 CDN URL을 사용합니다.
+ * Next.js public 디렉토리에 위치한 TTF 파일을 사용합니다.
  *
- * @note 배포 시 public/fonts/NotoSansKR-Regular.ttf 파일이 필요합니다.
- *       없을 경우 한글이 깨질 수 있습니다.
+ * @note react-pdf/renderer는 TTF 형식만 지원합니다 (woff2 미지원).
+ *       배포 시 public/fonts/NotoSansKR-*.ttf 파일이 필요합니다.
  */
 Font.register({
   family: 'NotoSansKR',
   fonts: [
     {
-      src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLTq8H4hfeE.woff2',
+      src: '/fonts/NotoSansKR-Regular.ttf',
       fontWeight: 'normal',
     },
     {
-      src: 'https://fonts.gstatic.com/s/notosanskr/v36/PbyxFmXiEBPT4ITbgNA5Cgms3VYcOA-vvnIzzuoyeLTq8H4hfeE.woff2',
+      src: '/fonts/NotoSansKR-Bold.ttf',
       fontWeight: 'bold',
     },
   ],
