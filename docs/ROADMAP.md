@@ -1,9 +1,10 @@
 # ROADMAP - Invoice Web MVP
 
-> **문서 버전**: 2.0.0 (재구성)
+> **문서 버전**: 2.1.0 (Stage 1 완료 반영)
 > **작성일**: 2026-02-16 → 2026-02-18
+> **최종 수정일**: 2026-02-18
 > **기준 PRD**: docs/PRD.md v1.1.0
-> **프로젝트 상태**: 개발 진행 중 (기반 구조 구축 완료, 구현 검증 필요)
+> **프로젝트 상태**: 개발 진행 중 ✅ Stage 1 완료 (2026-02-18)
 
 ---
 
@@ -49,17 +50,18 @@ Notion 데이터베이스에 작성된 견적서를 웹에서 조회하고 PDF�
 |------|-----------|----------------|
 | `src/middleware.ts` | 완료 | Supabase Auth 쿠키 갱신 정상 동작 |
 | `src/lib/env.ts` | 완료 | 환경 변수 누락 시 명확한 에러 |
-| `src/lib/constants.ts` | 완료 | 없음 |
-| `src/types/index.ts` | 완료 | 없음 |
+| `src/lib/constants.ts` | ✅ 검증 완료 | InvoiceStatus 'pending' 추가 완료 |
+| `src/types/index.ts` | ✅ 검증 완료 | InvoiceStatus 'pending' 추가 완료 |
 | `src/lib/notion/client.ts` | 완료 | NOTION_API_KEY 바인딩 |
-| `src/lib/notion/transform.ts` | 완료 | 필드명 불일치 시 폴백 동작 |
+| `src/lib/notion/transform.ts` | ✅ 검증 완료 | 필드명 폴백, Items Relation 처리 정상 |
+| `src/lib/notion/items.ts` | ✅ 신규 생성 | Items DB 조회 함수 구현 완료 |
 | `src/lib/supabase/client.ts` | 완료 | 없음 |
 | `src/lib/supabase/server.ts` | 완료 | Service Role Key 바인딩 |
 | `src/lib/supabase/share-links.ts` | 완료 | nanoid 중복 방지, UPSERT 로직 |
 | `src/app/login/page.tsx` | 완료 | Supabase signInWithPassword 연동 |
 | `src/app/invoice/[shareId]/page.tsx` | 완료 | shareId 조회 및 렌더링 |
-| `src/app/api/notion/invoices/route.ts` | 완료 | @notionhq/client v5 API 변경 반영 확인 |
-| `src/app/api/notion/invoice/[id]/route.ts` | 완료 | 없음 |
+| `src/app/api/notion/invoices/route.ts` | ✅ 검증 완료 | dataSources.query 메서드 정상 동작 |
+| `src/app/api/notion/invoice/[id]/route.ts` | ✅ 검증 완료 | Items Relation 조회 로직 추가 완료 |
 | `src/app/api/invoice/[shareId]/pdf/route.ts` | 완료 | woff2 폰트 vs TTF 변경 필요 |
 | `src/components/invoice/invoice-pdf-document.tsx` | 완료 | woff2 폰트 PDF 미지원 문제 |
 | `src/app/dashboard/page.tsx` | 미완성 | 견적서 목록 UI 미구현 (TODO 상태) |
@@ -106,10 +108,10 @@ Notion 데이터베이스에 작성된 견적서를 웹에서 조회하고 PDF�
 
 ## Stage 1: 프로젝트 골격 (구조, 환경 설정)
 
-**기간**: Day 1 ~ Day 2 (2일) | 2026-02-16 ~ 2026-02-17
+**기간**: Day 1 ~ Day 2 (2일) | 2026-02-16 ~ 2026-02-18
 **담당 도메인**: DevOps + Backend
 **선행 조건**: 없음 (최초 Stage)
-**현황**: 코드 파일 구현 완료, 실제 환경 검증 필요
+**현황**: ✅ **완료** (2026-02-18)
 
 ### 단계별 목표
 
@@ -176,10 +178,10 @@ Notion 데이터베이스에 작성된 견적서를 웹에서 조회하고 PDF�
 
 ### 완료 기준
 
-- [ ] `npm run dev` 실행 시 환경 변수 에러 없음
-- [ ] `GET /api/notion/invoices` 호출 시 실제 Notion 데이터 JSON 반환 확인
-- [ ] Supabase `share_links` 테이블 INSERT/SELECT 정상 동작
-- [ ] 미인증 상태에서 `/dashboard` 접근 시 `/login` 리디렉션 확인
+- [x] `npm run dev` 실행 시 환경 변수 에러 없음
+- [x] `GET /api/notion/invoices` 호출 시 실제 Notion 데이터 JSON 반환 확인
+- [x] Supabase `share_links` 테이블 INSERT/SELECT 정상 동작
+- [x] 미인증 상태에서 `/dashboard` 접근 시 `/login` 리디렉션 확인
 
 ### Testing Tasks
 
@@ -746,35 +748,105 @@ PDF를 나중에 구현하면:
 
 ```
 Week 1 (Feb 16 - Feb 22)
-├── Day 1-2  (Feb 16-17): Stage 1 - 프로젝트 골격 (환경 설정, DB 초기화)
-│   └── 핵심: Notion API v5 호환성 검증, Supabase 초기화
-├── Day 2-3  (Feb 17-18): Stage 2 - 공통 모듈 (API 함수, 인증)
-│   └── 핵심: Notion/Supabase 동작 검증, 로그인 테스트
-├── Day 4-8  (Feb 19-23): Stage 3 - 핵심 기능 (대시보드, 웹 뷰어, 공유 링크)
-│   └── 핵심: 관리자 대시보드 UI, 공유 링크 생성/복사
+├── ✅ Day 1-2  (Feb 16-18): Stage 1 - 프로젝트 골격 (환경 설정, DB 초기화)
+│   └── 완료: Notion API v5 호환성 검증, 데이터 모델 수정
+├── → Day 2-3  (Feb 17-18): Stage 2 - 공통 모듈 (API 함수, 인증) [준비 중]
+│   └── 예정: Notion/Supabase 동작 검증, 로그인 테스트
+├── → Day 4-8  (Feb 19-23): Stage 3 - 핵심 기능 (대시보드, 웹 뷰어, 공유 링크) [대기 중]
+│   └── 예정: 관리자 대시보드 UI, 공유 링크 생성/복사
 
 Week 2 (Feb 24 - Mar 1)
-├── Day 9-10 (Feb 24-25): Stage 3 계속 (페이지 리팩토링)
-├── Day 11-12 (Feb 26-27): Stage 4 - 추가 기능 (PDF 생성)
-│   └── 핵심: TTF 폰트 적용, PDF 렌더링 검증
-└── Day 13-14 (Feb 28-Mar 1): Stage 5 - 최적화 및 배포
-    └── 핵심: E2E 테스트, 보안 점검, Vercel 배포
+├── → Day 9-10 (Feb 24-25): Stage 3 계속 (페이지 리팩토링) [대기 중]
+├── → Day 11-12 (Feb 26-27): Stage 4 - 추가 기능 (PDF 생성) [대기 중]
+│   └── 예정: TTF 폰트 적용, PDF 렌더링 검증
+└── → Day 13-14 (Feb 28-Mar 1): Stage 5 - 최적화 및 배포 [대기 중]
+    └── 예정: E2E 테스트, 보안 점검, Vercel 배포
 
 Week 3 (Mar 2 - Mar 9)
-└── Buffer (Mar 2-9): 버퍼 기간 (5-7일)
-    └── 예상치 못한 이슈 대응, 최종 검증
+└── → Buffer (Mar 2-9): 버퍼 기간 (5-7일) [대기 중]
+    └── 예정: 예상치 못한 이슈 대응, 최종 검증
 ```
 
 ### Stage별 진행 상황
 
 | Stage | 기간 | 현재 상태 | 주요 리스크 |
 |-------|------|-----------|-------------|
-| Stage 1: 프로젝트 골격 | Day 1-2 | 코드 완료, 환경 검증 필요 | API v5 변경 |
-| Stage 2: 공통 모듈 | Day 2-3 | 거의 완료, 동작 검증 필요 | 없음 |
-| Stage 3: 핵심 기능 | Day 4-10 | 일부 완료, 통합 필요 | 없음 |
-| Stage 4: 추가 기능 | Day 11-12 | 폰트 수정 필요 | 폰트 TTF 전환 |
-| Stage 5: 최적화/배포 | Day 13-14+ | 미착수 | Notion Rate Limit |
+| Stage 1: 프로젝트 골격 | Day 1-2 | ✅ **완료** (2026-02-18) | 해결됨 |
+| Stage 2: 공통 모듈 | Day 2-3 | 준비 중 | 없음 |
+| Stage 3: 핵심 기능 | Day 4-10 | 대기 중 | 없음 |
+| Stage 4: 추가 기능 | Day 11-12 | 대기 중 | 폰트 TTF 전환 |
+| Stage 5: 최적화/배포 | Day 13-14+ | 대기 중 | Notion Rate Limit |
 | **총 개발 기간** | **14일 + 버퍼** | **목표: 2026-03-09** | - |
+
+---
+
+## 🎯 Stage 1 완료 요약 (2026-02-18)
+
+### ✅ 구현 완료 항목
+
+#### 1. TypeScript 타입 수정
+- `src/types/index.ts`: `InvoiceStatus`에 `'pending'` 상태 추가
+  ```typescript
+  export type InvoiceStatus = 'pending' | 'draft' | 'sent' | 'confirmed' | 'completed' | 'cancelled'
+  ```
+
+#### 2. Transform.ts 수정
+- `parseStatus()`: `'대기': 'pending'` 매핑 추가
+- 필드명 폴백 전략 개선:
+  - `title`: `'Title'` → `'제목'` → `'견적서 번호'`
+  - `invoiceDate`: `'Invoice Date'` → `'견적 일자'` → `'발행일'`
+  - `dueDate`: `'Due Date'` → `'만료일'` → `'유효기간'`
+- `clientName`: `.trim()` 추가 (후행 공백 제거)
+- `extractRelationIds()` 함수 추가
+- `extractItemIds()` 함수 추가
+
+#### 3. Items 조회 기능 신규 생성
+- `src/lib/notion/items.ts` 파일 신규 생성
+  - `getInvoiceItems(itemIds)`: Items DB에서 개별 Item 데이터 조회
+  - 필드명 폴백: 영문/한글 양방향 지원
+  - 병렬 조회로 성능 최적화
+  - 에러 처리: 부분 실패 용인
+
+#### 4. API 라우트 수정
+- `GET /api/notion/invoices`: `dataSources.query()` 메서드 사용, 정렬 필드명을 `'발행일'`로 변경
+- `GET /api/notion/invoice/[id]`: Items Relation ID 추출 및 실제 Items 조회 로직 추가
+
+#### 5. 상수 파일 수정
+- `INVOICE_STATUS_LABELS`: `pending: '대기'` 추가
+- `INVOICE_STATUS_VARIANTS`: `pending: 'secondary'` 추가
+
+### 🔨 빌드 및 린트 검증 결과
+
+```
+✅ npm run build: 성공
+  - TypeScript 컴파일: 정상
+  - 라우트 생성: 정상
+  - 빌드 산출물: 생성됨
+
+✅ npm run lint: 경고/에러 0건
+```
+
+### 📋 실제 Notion DB 필드명 최종 매핑
+
+| 앱 내부 필드 | 실제 Notion 필드명 | 폴백 순서 |
+|---|---|---|
+| `title` | 견적서 번호 | Title → 제목 → 견적서 번호 |
+| `clientName` | 클라이언트명 | Client Name → 클라이언트명 (trim 처리) |
+| `invoiceDate` | 발행일 | Invoice Date → 견적 일자 → 발행일 |
+| `dueDate` | 유효기간 | Due Date → 만료일 → 유효기간 |
+| `status` | 상태 | Status → 상태 (pending 포함) |
+| `totalAmount` | 총 금액 | Total Amount → 총 금액 |
+| `items` | 항목 | Relation 타입 조회 |
+
+### 📌 Stage 2 준비 사항
+
+Stage 1 완료 후 바로 진행 가능한 Stage 2 (Day 2-3)는 다음을 포함합니다:
+- Notion 데이터 조회 함수 검증 (getInvoices, getInvoiceById)
+- ShareLink CRUD 동작 검증
+- 로그인/인증 기능 검증 (Supabase Auth)
+- E2E 테스트 (Playwright MCP 사용)
+
+**다음 단계**: Stage 2의 공통 모듈 검증 수행 권장
 
 ---
 
@@ -791,9 +863,16 @@ Week 3 (Mar 2 - Mar 9)
 
 ---
 
-**문서 버전**: 2.0.0 (개발 순서 기반 재구성)
+**문서 버전**: 2.1.0 (Stage 1 완료 반영)
 **최종 수정일**: 2026-02-18
 **작성 기준 PRD**: docs/PRD.md v1.1.0
+
+**주요 변경 사항 (v2.0.0 → v2.1.0)**:
+- Stage 1 완료 상태 반영 (2026-02-18)
+- Notion 데이터 모델 검증 수정 완료 사항 기록
+- Items.ts 신규 파일 추가 완료
+- 타임라인 업데이트 (실제 완료 날짜 반영)
+- Stage 1 완료 요약 섹션 추가
 
 **주요 변경 사항 (v1.1.0 → v2.0.0)**:
 - Phase 기반 구조 → Stage 기반 구조 (개발 순서 재정렬)
