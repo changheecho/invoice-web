@@ -210,11 +210,16 @@ export default async function PublicInvoicePage(
 
     if (itemIds.length > 0) {
       console.log('[공개페이지] Items 조회 시작...')
-      const items = await getInvoiceItems(itemIds)
+      const items = await getInvoiceItems(itemIds, shareLink.notionPageId)
       console.log('[공개페이지] Items 조회 완료:', { itemsCount: items.length, items })
       invoice = { ...invoice, items }
     } else {
-      console.log('[공개페이지] Items ID가 없음')
+      console.log('[공개페이지] Items ID가 없음 - 역방향 쿼리 시도...')
+      const items = await getInvoiceItems([], shareLink.notionPageId)
+      if (items.length > 0) {
+        console.log('[공개페이지] 역방향 쿼리 성공:', { itemsCount: items.length })
+        invoice = { ...invoice, items }
+      }
     }
   } catch (error) {
     console.error('[공개페이지] 견적서 조회 오류:', error)
