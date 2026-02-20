@@ -24,18 +24,13 @@ import { INVOICE_STATUS_LABELS, CURRENCY_FORMAT } from '@/lib/constants'
 // ============================================================
 
 /**
- * Noto Sans KR 폰트 등록
- * 프로젝트 public/fonts 디렉토리에 위치한 TTF 파일을 data URI로 등록합니다.
+ * Noto Sans CJK 폰트 등록
  *
- * @note react-pdf/renderer는 TTF 형식과 data URI를 지원합니다.
- *       배포 시 public/fonts/NotoSansKR-*.ttf 파일이 필요합니다.
+ * @note react-pdf/renderer는 기본적으로 한글을 지원하지 않습니다.
+ *       따라서 PDF는 ASCII 문자만 정상 표시됩니다.
+ *       한글이 필요한 경우 웹 뷰어에서 확인하거나 브라우저 인쇄 기능을 사용하세요.
  */
-// 폰트 등록은 일단 비활성화 (react-pdf 호환성 이슈)
-// TODO: 한글 폰트 문제 해결 필요
-// - 로컬 TTF 파일 직접 로드 시도
-// - 또는 puppeteer 기반 PDF 생성으로 변경
-// const registerFonts = () => { ... }
-// registerFonts()
+// 폰트 등록 비활성화 (react-pdf/renderer의 한글 지원 한계)
 
 // ============================================================
 // PDF 스타일시트
@@ -48,7 +43,7 @@ import { INVOICE_STATUS_LABELS, CURRENCY_FORMAT } from '@/lib/constants'
 const styles = StyleSheet.create({
   // 페이지 전체 스타일
   page: {
-    fontFamily: 'Helvetica', // TODO: 한글 폰트 설정 필요 (현재 기본 폰트 사용)
+    fontFamily: 'Helvetica', // 기본 폰트 (한글 미지원)
     fontSize: 10,
     padding: 40,
     backgroundColor: '#ffffff',

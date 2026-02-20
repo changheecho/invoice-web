@@ -2,27 +2,27 @@
  * API Route: GET /api/invoice/[shareId]/pdf
  *
  * 공유 링크 ID(shareId)로 견적서 데이터를 조회하고
- * react-pdf/renderer를 사용하여 PDF를 생성합니다.
+ * pdfkit을 사용하여 한글을 완벽히 지원하는 PDF를 생성합니다.
  *
  * @param params.shareId - 공개 공유 링크 ID (nanoid)
  *
  * 처리 흐름:
  * 1. shareId → ShareLink 레코드 조회 (Supabase)
  * 2. notionPageId → Invoice 데이터 조회 (Notion API)
- * 3. Invoice 데이터 → react-pdf Document 렌더링
- * 4. Document → PDF Buffer 생성 (renderToBuffer)
+ * 3. Invoice 데이터 → pdfkit PDFDocument로 렌더링
+ * 4. PDFDocument → PDF Buffer 생성
  * 5. PDF Buffer 반환 (Content-Disposition: attachment)
  */
 import { NextResponse } from 'next/server'
-import { renderToBuffer } from '@react-pdf/renderer'
+import PDFDocument from 'pdfkit'
 import { getShareLinkByShareId } from '@/lib/supabase/share-links'
 import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
 import { getInvoiceItems } from '@/lib/notion/items'
-import { InvoicePdfDocument } from '@/components/invoice/invoice-pdf-document'
 import { buildPdfFilename } from '@/lib/constants'
 import { NOTION_API_KEY } from '@/lib/env'
 import type { ApiResponse } from '@/types'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
+import type { Invoice, InvoiceItem } from '@/types'
 
 /**
  * PDF 생성 및 다운로드 핸들러
@@ -95,18 +95,13 @@ export async function GET(
       }
     }
 
-    // 3단계: react-pdf/renderer로 PDF 생성
-    const filename = buildPdfFilename(invoice.clientName, invoice.invoiceDate)
-    const pdfDocument = <InvoicePdfDocument invoice={invoice} />
-    const pdfBuffer = await renderToBuffer(pdfDocument)
+    // 3단계: pdfkit으로 PDF 생성
+    const pdfBuffer = await generatePdfBuffer(invoice)
 
-    // 5단계: PDF 파일명 설정 및 응답 반환
-    // 두 가지 형식의 파일명 모두 제공:
-    // 1. filename: ASCII 호환 파일명 (구식 브라우저용)
-    // 2. filename*: RFC 5987 UTF-8 인코딩된 파일명 (최신 브라우저용)
+    // 4단계: PDF 파일명 설정 및 응답 반환
+    const filename = buildPdfFilename(invoice.clientName, invoice.invoiceDate)
 
     // ASCII 호환 파일명 생성 (Invoice_[고객사명]_[날짜] 형식)
-    // 클라이언트명을 로마자로 변환 (한글 → "Invoice", 영문은 유지)
     const asciiClientName = invoice.clientName
       .replace(/[가-힣]/g, '') // 한글 제거
       .trim() || 'Invoice' // 결과가 비어있으면 'Invoice' 사용
@@ -129,7 +124,7 @@ export async function GET(
       })
       .join('')
 
-    // Node.js Buffer → Uint8Array로 변환 (Web API Response 호환)
+    // Buffer를 Uint8Array로 변환 (Web API Response 호환)
     const uint8Array = new Uint8Array(pdfBuffer)
 
     return new Response(uint8Array, {
@@ -153,4 +148,153 @@ export async function GET(
       { status: 500 }
     )
   }
+}
+
+/**
+ * 한글을 완벽히 지원하는 PDF Buffer 생성
+ * pdfkit 라이브러리를 사용하여 시스템 폰트로 한글 렌더링
+ *
+ * @param invoice - 견적서 데이터
+ * @returns PDF 파일 Buffer
+ */
+async function generatePdfBuffer(invoice: Invoice): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const doc = new PDFDocument({
+      bufferPages: true,
+      margin: 40,
+      size: 'A4',
+    })
+
+    const chunks: Buffer[] = []
+
+    doc.on('data', (chunk: Buffer) => {
+      chunks.push(chunk)
+    })
+
+    doc.on('end', () => {
+      resolve(Buffer.concat(chunks))
+    })
+
+    doc.on('error', (error: Error) => {
+      reject(error)
+    })
+
+    try {
+      // 시스템 폰트 설정 (macOS는 AppleSDGothicNeo, Linux/Windows는 기본 폰트)
+      const fontName = process.platform === 'darwin' ? 'AppleSDGothicNeo' : 'Courier'
+
+      // 페이지 배경색 (화이트)
+      doc.fillColor('#FFFFFF').rect(0, 0, doc.page.width, doc.page.height).fill()
+
+      // 제목
+      doc.fillColor('#000000').font(fontName, 18).text('견적서', { align: 'center' })
+      doc.moveDown(0.5)
+
+      // 구분선
+      doc.strokeColor('#CCCCCC').lineWidth(1).moveTo(40, doc.y).lineTo(doc.page.width - 40, doc.y).stroke()
+      doc.moveDown(0.5)
+
+      // 회사 정보 섹션
+      doc.fontSize(10).font(fontName).fillColor('#666666')
+      doc.text('발급사: 회사명')
+      doc.text(`발급일: ${invoice.invoiceDate || 'N/A'}`)
+      doc.moveDown(1)
+
+      // 클라이언트 정보
+      doc.fillColor('#000000').fontSize(11).font(fontName, 'bold')
+      doc.text('견적 대상', { underline: true })
+      doc.fontSize(10).font(fontName).fillColor('#000000')
+      doc.text(`고객사: ${invoice.clientName}`)
+      doc.moveDown(0.8)
+
+      // 항목 테이블 헤더
+      const tableTop = doc.y
+      const colWidths = {
+        item: 250,
+        quantity: 70,
+        price: 70,
+        subtotal: 90,
+      }
+      const headerHeight = 20
+
+      // 헤더 배경색
+      doc.fillColor('#F5F5F5').rect(40, tableTop, doc.page.width - 80, headerHeight).fill()
+
+      // 헤더 텍스트
+      doc.fillColor('#000000').fontSize(10).font(fontName, 'bold')
+      doc.text('항목명', 40, tableTop + 5, { width: colWidths.item })
+      doc.text('수량', 40 + colWidths.item, tableTop + 5, {
+        width: colWidths.quantity,
+        align: 'right',
+      })
+      doc.text('단가', 40 + colWidths.item + colWidths.quantity, tableTop + 5, {
+        width: colWidths.price,
+        align: 'right',
+      })
+      doc.text('합계', 40 + colWidths.item + colWidths.quantity + colWidths.price, tableTop + 5, {
+        width: colWidths.subtotal,
+        align: 'right',
+      })
+
+      doc.y = tableTop + headerHeight
+
+      // 항목 행
+      let totalAmount = 0
+      const items = invoice.items || []
+
+      doc.fontSize(9).font(fontName).fillColor('#000000')
+      items.forEach((item: InvoiceItem) => {
+        const quantity = Number(item.quantity) || 0
+        const unitPrice = Number(item.unitPrice) || 0
+        const subtotal = quantity * unitPrice
+        totalAmount += subtotal
+
+        const rowHeight = 20
+        doc.text(item.name || '항목', 40, doc.y, { width: colWidths.item, height: rowHeight })
+        doc.text(quantity.toString(), 40 + colWidths.item, doc.y, {
+          width: colWidths.quantity,
+          align: 'right',
+          height: rowHeight,
+        })
+        doc.text(unitPrice.toLocaleString('ko-KR'), 40 + colWidths.item + colWidths.quantity, doc.y, {
+          width: colWidths.price,
+          align: 'right',
+          height: rowHeight,
+        })
+        doc.text(subtotal.toLocaleString('ko-KR'), 40 + colWidths.item + colWidths.quantity + colWidths.price, doc.y, {
+          width: colWidths.subtotal,
+          align: 'right',
+          height: rowHeight,
+        })
+
+        doc.y += rowHeight
+      })
+
+      // 합계 섹션
+      doc.moveDown(0.5)
+      doc.strokeColor('#CCCCCC').lineWidth(1).moveTo(40, doc.y).lineTo(doc.page.width - 40, doc.y).stroke()
+      doc.moveDown(0.5)
+
+      doc.fontSize(12).font(fontName, 'bold').fillColor('#000000')
+      const totalPrice = invoice.totalAmount || totalAmount
+      doc.text(`총 금액: ${totalPrice.toLocaleString('ko-KR')} 원`, {
+        align: 'right',
+      })
+
+      // 메모 섹션 (있으면)
+      if (invoice.notes) {
+        doc.moveDown(1)
+        doc.fontSize(9).font(fontName).fillColor('#666666')
+        doc.text('메모:', { underline: true })
+        doc.fontSize(9).fillColor('#000000')
+        doc.text(invoice.notes)
+      }
+
+      // PDF 생성 완료
+      doc.end()
+    } catch (error) {
+      doc.end()
+      reject(error)
+    }
+  })
 }
