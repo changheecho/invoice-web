@@ -60,8 +60,9 @@ export async function POST(
     const base64Data = pdfBase64.split(',')[1] || pdfBase64
     const pdfBuffer = Buffer.from(base64Data, 'base64')
 
-    // RFC 5987 표준에 따른 UTF-8 인코딩된 파일명
-    const contentDisposition = `attachment; filename*=UTF-8''${encodeURIComponent(pdfFileName)}`
+    // RFC 6266/5987 표준에 따른 UTF-8 인코딩된 파일명 (fallback 포함)
+    const encodedFileName = encodeURIComponent(pdfFileName)
+    const contentDisposition = `attachment; filename="invoice.pdf"; filename*=UTF-8''${encodedFileName}`
 
     console.log('[PDF API] 파일명:', pdfFileName, '크기:', pdfBuffer.length)
 

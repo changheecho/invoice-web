@@ -32,7 +32,7 @@
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import jsPDF from 'jspdf'
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 import { InvoiceActions } from '@/components/invoice/InvoiceActions'
 
 /**
@@ -93,56 +93,37 @@ export const InvoiceActionsWrapper = ({
       if (hadDarkClass) htmlElement.classList.remove('dark')
 
       try {
-        // DOM을 캔버스로 변환
-        const canvas = await html2canvas(element, {
-          scale: 2,
+        // DOM을 이미지로 변환 (html-to-image)
+        const filter = (node: HTMLElement) => {
+          const exclusionId = node.dataset ? node.dataset.html2pdfIgnore : null;
+          return exclusionId !== 'true';
+        };
+
+        const dataUrl = await toPng(element, {
+          pixelRatio: 2, // 고해상도 이미지 처리
           backgroundColor: '#ffffff',
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          removeContainer: true,
-          // CSS 파싱 오류 무시 - TailwindCSS v4 lab() 함수 호환성 문제 대응
-          onclone: (clonedDoc) => {
-            try {
-              // 모든 style, link 태그 제거 (CSS 파싱 에러 완전 차단)
-              clonedDoc.querySelectorAll('style, link, link[rel="stylesheet"]').forEach(node => {
-                node.parentNode?.removeChild(node)
-              })
-
-              // HTML 요소에서도 dark 클래스 제거
-              const htmlElement = clonedDoc.documentElement
-              htmlElement.classList.remove('dark')
-              htmlElement.style.backgroundColor = 'white'
-              htmlElement.style.color = 'black'
-
-              // 기본 문서 스타일 강제 설정
-              const body = clonedDoc.body
-              body.style.cssText = `
-                background-color: white !important;
-                color: black !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-              `
-
-              // 모든 요소에 기본 스타일 적용
-              clonedDoc.querySelectorAll('*').forEach((el) => {
-                const el_ = el as HTMLElement
-                const tagName = el_.tagName?.toLowerCase()
-                // 이미지, 버튼 등은 기본 스타일 유지
-                if (!['img', 'button'].includes(tagName)) {
-                  el_.style.cssText = `
-                    background-color: white !important;
-                    color: black !important;
-                    border: 1px solid #e5e7eb !important;
-                  `
-                }
-              })
-            } catch (e) {
-              console.warn('[PDF] 스타일 처리 중 오류:', e)
-            }
-          },
+          skipFonts: false,
+          filter: filter,
+          style: {
+            transform: 'scale(1)',
+            transformOrigin: 'top left'
+          }
         })
+
+        // 이미지를 캔버스로 변환하여 기존 jsPDF 분할 로직 재사용
+        const img = new Image()
+        img.src = dataUrl
+        await new Promise((resolve) => {
+          img.onload = resolve
+        })
+
+        const canvas = document.createElement('canvas')
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext('2d')
+        if (ctx) {
+          ctx.drawImage(img, 0, 0)
+        }
 
         // PDF 생성
         const pdf = new jsPDF({

@@ -83,6 +83,7 @@ export const InvoiceActions = ({
       )}
       role="group"
       aria-label="견적서 액션"
+      data-html2pdf-ignore="true"
     >
       {/* PDF 다운로드 버튼 */}
       {showPdfButton && (
