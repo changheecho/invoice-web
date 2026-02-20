@@ -196,23 +196,41 @@ export const InvoiceActionsWrapper = ({
           }
         }
 
-        // PDF Blob을 blob: URL로 다운로드
-        // Safari/Chrome 모두에서 한글 파일명 정상 지원
-        const arrayBuffer = pdf.output('arraybuffer')
-        const typedBlob = new Blob([arrayBuffer], { type: 'application/pdf' })
-        const url = URL.createObjectURL(typedBlob)
+        // 서버 API로 PDF 전송 (Content-Disposition 헤더 설정)
+        // 이것이 모든 브라우저에서 한글 파일명을 정상 지원하는 유일한 방법
+        console.log('[PDF 다운로드] 서버 API 호출 시작:', { pdfFileName })
 
-        // blob: URL로 직접 다운로드 (한글 파일명 정상 지원)
+        // PDF를 data URI로 변환
+        const pdfDataUri = pdf.output('datauristring')
+
+        // 서버 API로 POST 요청
+        const apiResponse = await fetch(`/api/invoice/${shareId || 'local'}/pdf`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            pdfBase64: pdfDataUri,
+            pdfFileName: pdfFileName,
+          }),
+        })
+
+        if (!apiResponse.ok) {
+          throw new Error(`API 오류: ${apiResponse.status}`)
+        }
+
+        // 서버에서 PDF Blob 받기
+        const pdfBlob = await apiResponse.blob()
+
+        // Content-Disposition 헤더가 설정된 상태로 다운로드
+        const url = URL.createObjectURL(pdfBlob)
         const link = document.createElement('a')
         link.href = url
-        link.download = pdfFileName
-        document.body.appendChild(link)
+        link.download = pdfFileName  // 폴백 파일명 (API 헤더가 우선됨)
         link.click()
-        document.body.removeChild(link)
-
-        // 메모리 해제
         URL.revokeObjectURL(url)
 
+        console.log('[PDF 다운로드] 완료')
         toast.success('PDF 다운로드가 완료되었습니다')
       } finally {
         // Dark 클래스 복원
@@ -224,7 +242,7 @@ export const InvoiceActionsWrapper = ({
     } finally {
       setIsLoading(false)
     }
-  }, [pdfFileName])
+  }, [pdfFileName, shareId])
 
   /**
    * 공유 링크 복사 핸들러
