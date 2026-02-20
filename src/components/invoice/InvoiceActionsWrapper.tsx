@@ -196,40 +196,21 @@ export const InvoiceActionsWrapper = ({
           }
         }
 
-        // PDF Blob을 Base64로 변환하여 API로 다운로드
-        // (macOS에서 한글 파일명을 제대로 처리하기 위해 API 라우트 사용)
-        const pdfBlob = pdf.output('blob')
-        const arrayBuffer = await pdfBlob.arrayBuffer()
-        const uint8Array = new Uint8Array(arrayBuffer)
-        let base64Data = ''
-        for (let i = 0; i < uint8Array.length; i++) {
-          base64Data += String.fromCharCode(uint8Array[i])
-        }
-        base64Data = btoa(base64Data)
+        // PDF Blob을 blob: URL로 다운로드
+        // Safari/Chrome 모두에서 한글 파일명 정상 지원
+        const arrayBuffer = pdf.output('arraybuffer')
+        const typedBlob = new Blob([arrayBuffer], { type: 'application/pdf' })
+        const url = URL.createObjectURL(typedBlob)
 
-        // API 라우트에 POST 요청 (Content-Disposition 헤더 설정)
-        const response = await fetch('/api/pdf/download', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            base64Data,
-            fileName: pdfFileName,
-          }),
-        })
-
-        if (!response.ok) {
-          throw new Error('PDF 다운로드 요청 실패')
-        }
-
-        // 응답 Blob을 다운로드 처리
-        const downloadBlob = await response.blob()
-        const url = URL.createObjectURL(downloadBlob)
+        // blob: URL로 직접 다운로드 (한글 파일명 정상 지원)
         const link = document.createElement('a')
         link.href = url
         link.download = pdfFileName
         document.body.appendChild(link)
         link.click()
         document.body.removeChild(link)
+
+        // 메모리 해제
         URL.revokeObjectURL(url)
 
         toast.success('PDF 다운로드가 완료되었습니다')
