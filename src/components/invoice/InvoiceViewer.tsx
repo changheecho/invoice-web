@@ -151,6 +151,7 @@ export function InvoiceViewer({
 
   return (
     <article
+      id="invoice-content"
       aria-label={`견적서: ${invoice.title}`}
       className={cn(
         // 기본 레이아웃

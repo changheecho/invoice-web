@@ -31,6 +31,8 @@
 
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
+import jsPDF from 'jspdf'
+import html2canvas from 'html2canvas'
 import { InvoiceActions } from '@/components/invoice/InvoiceActions'
 
 /**
@@ -77,29 +79,37 @@ export const InvoiceActionsWrapper = ({
 
   /**
    * PDF 다운로드 핸들러
-   * API Route를 통해 PDF를 생성하고 다운로드합니다.
+   * html2canvas로 현재 렌더링된 견적서 DOM을 캡처하여
+   * jsPDF로 PDF로 변환하고 다운로드합니다.
    */
   const handlePdfClick = useCallback(async () => {
-    if (!shareId) return
-
     setIsLoading(true)
     try {
-      // PDF 생성 API 호출
-      const pdfUrl = `/api/invoice/${shareId}/pdf`
-      const link = document.createElement('a')
-      link.href = pdfUrl
-      link.download = pdfFileName
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      toast.success('PDF 다운로드가 시작되었습니다')
+      // 견적서 DOM 요소 캡처
+      const element = document.getElementById('invoice-content')
+      if (!element) throw new Error('견적서 영역을 찾을 수 없습니다')
+
+      const canvas = await html2canvas(element, {
+        scale: 2, // 고해상도 (retina)
+        useCORS: true, // 외부 리소스 CORS 허용
+        backgroundColor: '#ffffff',
+      })
+      const imgData = canvas.toDataURL('image/png')
+
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      pdf.save(pdfFileName)
+      toast.success('PDF 다운로드가 완료되었습니다')
     } catch (error) {
-      toast.error('PDF 다운로드 실패했습니다')
+      toast.error('PDF 다운로드에 실패했습니다')
       console.error('[PDF 다운로드] 실패:', error)
     } finally {
       setIsLoading(false)
     }
-  }, [shareId, pdfFileName])
+  }, [pdfFileName])
 
   /**
    * 공유 링크 복사 핸들러
