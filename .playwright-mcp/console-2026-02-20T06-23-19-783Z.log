@@ -1,0 +1,24 @@
+[     313ms] [WARNING] Ignoring inability to install OPFS sqlite3_vfs: Cannot install OPFS: Missing SharedArrayBuffer and/or Atomics. The server must emit the COOP/COEP response headers to enable those. See https://sqlite.org/wasm/doc/trunk/persistence.md#coop-coep @ https://www.notion.so/_assets/wasm-sqlite-worker-ce3e75522002c88c.js:0
+[     928ms] [WARNING] Amplitude Logger [Warn]: Event not tracked, no destination plugins on the instance @ https://www.notion.so/_assets/51706-5b63f2c0f63a454b.js:0
+[     946ms] [WARNING] [GSI_LOGGER]: Your client application uses one of the Google One Tap prompt UI status methods that may stop functioning when FedCM becomes mandatory. Refer to the migration guide to update your code accordingly and opt-in to FedCM to test your changes. Learn more: https://developers.google.com/identity/gsi/web/guides/fedcm-migration?s=dc#display_moment and https://developers.google.com/identity/gsi/web/guides/fedcm-migration?s=dc#skipped_moment @ https://www.notion.so/_assets/51706-5b63f2c0f63a454b.js:0
+[     955ms] [ERROR] Not signed in with the identity provider. @ https://www.notion.so/login?redirectURL=%2Fprofile%2Fintegrations%2Fpublic:0
+[    1173ms] [ERROR] [GSI_LOGGER]: FedCM get() rejects with NetworkError: Error retrieving a token. @ https://www.notion.so/_assets/51706-5b63f2c0f63a454b.js:0
+[    7579ms] [ERROR] Cross-Origin-Opener-Policy policy would block the window.closed call. @ https://www.notion.so/_assets/43825-7a29033ad1b6eb69.js:0
+[    7579ms] [ERROR] Cross-Origin-Opener-Policy policy would block the window.closed call. @ https://www.notion.so/_assets/43825-7a29033ad1b6eb69.js:0
+[   21679ms] [ERROR] Cross-Origin-Opener-Policy policy would block the window.closed call. @ https://www.notion.so/_assets/43825-7a29033ad1b6eb69.js:0
+[   21679ms] [ERROR] Cross-Origin-Opener-Policy policy would block the window.closed call. @ https://www.notion.so/_assets/43825-7a29033ad1b6eb69.js:0
+[   22094ms] [ERROR] Cross-Origin-Opener-Policy policy would block the window.close call. @ https://www.notion.so/_assets/43825-7a29033ad1b6eb69.js:0
+[   22094ms] [ERROR] Cross-Origin-Opener-Policy policy would block the window.close call. @ https://www.notion.so/_assets/43825-7a29033ad1b6eb69.js:0
+[   23623ms] Error: Failed to load a required record: user_root, d3bde5a6-ab60-45d3-8e3b-412843bd2a95, undefined.
+    at Object.loadRecordModel [as loadFn] (https://www.notion.so/_assets/79914-e7ab4a6d170c05be.js:1:52836)
+    at async https://www.notion.so/_assets/79914-e7ab4a6d170c05be.js:28:231505
+    at async Promise.all (index 0)
+    at async l (https://www.notion.so/_assets/79914-e7ab4a6d170c05be.js:28:231443)
+    at async n (https://www.notion.so/_assets/79914-e7ab4a6d170c05be.js:28:231044)
+    at async Object.p (https://www.notion.so/_assets/79914-e7ab4a6d170c05be.js:28:232736)
+    at async Object.d (https://www.notion.so/_assets/79914-e7ab4a6d170c05be.js:1:52422)
+    at async f.N.measure.environment (https://www.notion.so/_assets/66664-99863f2c20dad2ab.js:1:3099)
+    at async a.measureErrors (https://www.notion.so/_assets/66664-99863f2c20dad2ab.js:1:50509)
+    at async environment (https://www.notion.so/_assets/66664-99863f2c20dad2ab.js:1:2872)
+[   23752ms] [ERROR] Attestation check for Attribution Reporting on https://www.facebook.com failed. @ https://www.notion.so/profile/integrations/public:0
+[   24187ms] [ERROR] Attestation check for Attribution Reporting on https://www.google-analytics.com failed. @ https://www.notion.so/profile/integrations/public:0

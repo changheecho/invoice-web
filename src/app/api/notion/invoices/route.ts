@@ -59,10 +59,14 @@ export async function GET() {
   }
 
   try {
-    // Notion 데이터 소스 쿼리 (발행일 기준 내림차순 정렬)
-    // @notionhq/client v5에서는 dataSources.query를 사용합니다.
-    const response = await notionClient.dataSources.query({
-      data_source_id: NOTION_DATABASE_ID,
+    // @notionhq/client를 사용하여 Notion API 호출
+    console.log('[API] Notion 데이터베이스 조회:', {
+      NOTION_DATABASE_ID,
+      apiKey: process.env.NOTION_API_KEY ? '설정됨' : '미설정',
+    })
+
+    const response = await notionClient.databases.query({
+      database_id: NOTION_DATABASE_ID,
       sorts: [
         {
           property: '발행일',
@@ -72,9 +76,9 @@ export async function GET() {
     })
 
     // Notion 페이지 객체를 InvoiceSummary 타입으로 변환
-    const invoices: InvoiceSummary[] = (response.results as unknown[])
+    const invoices: InvoiceSummary[] = response.results
       .filter((page): page is PageObjectResponse => {
-        return typeof page === 'object' && page !== null && 'properties' in page
+        return page.object === 'page' && 'properties' in page
       })
       .map(transformToInvoiceSummary)
 

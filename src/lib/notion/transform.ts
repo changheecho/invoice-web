@@ -5,12 +5,13 @@
  * 안전하게 변환합니다. 필드가 없거나 형식이 달라도 크래시 없이 처리합니다.
  *
  * Notion 데이터베이스 필드명 매핑:
- * - Title → 견적서 제목 (title 타입)
+ * - Title → 견적서 제목 → 견적서 번호 (title 타입)
  * - Client Name → 클라이언트명 (rich_text 타입)
- * - Invoice Date → 견적 일자 (date 타입)
- * - Due Date → 만료일 (date 타입, 선택)
- * - Status → 상태 (select 타입)
+ * - Invoice Date → 견적 일자 → 발행일 (date 타입)
+ * - Due Date → 만료일 → 유효기간 (date 타입, 선택)
+ * - Status → 상태 (status 타입 또는 select 타입)
  * - Total Amount → 총 금액 (number 타입)
+ * - Items → 항목 (relation 타입)
  * - Notes → 메모 (rich_text 타입, 선택)
  */
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
@@ -65,16 +66,27 @@ function extractNumber(
 }
 
 /**
- * Notion 프로퍼티에서 select 값을 추출합니다.
+ * Notion 프로퍼티에서 select 또는 status 값을 추출합니다.
  *
- * @param property - Notion select 타입 프로퍼티
- * @returns select 이름 문자열 (없으면 빈 문자열)
+ * @param property - Notion select 또는 status 타입 프로퍼티
+ * @returns select/status 이름 문자열 (없으면 빈 문자열)
  */
 function extractSelect(
   property: PageObjectResponse['properties'][string]
 ): string {
-  if (!property || property.type !== 'select') return ''
-  return property.select?.name || ''
+  if (!property) return ''
+
+  // select 타입 처리
+  if (property.type === 'select') {
+    return property.select?.name || ''
+  }
+
+  // status 타입 처리 (Notion의 Status 프로퍼티)
+  if (property.type === 'status') {
+    return property.status?.name || ''
+  }
+
+  return ''
 }
 
 /**

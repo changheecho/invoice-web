@@ -133,14 +133,14 @@
       "name": "Stage 2-1: Notion 데이터 조회 함수 검증",
       "description": "getInvoices(), getInvoiceById(id) 함수 동작 검증, Items 필드 JSON 파싱, 응답 타입 확인",
       "notes": "Items 필드가 JSON 문자열 형태일 수 있음. try-catch 폴백으로 빈 배열 처리 필요",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         {
           "taskId": "929b2ecd-f288-4bd3-b86d-c464a81f625f"
         }
       ],
       "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
+      "updatedAt": "2026-02-18T07:49:22.473Z",
       "relatedFiles": [
         {
           "path": "src/lib/notion/client.ts",
@@ -162,14 +162,14 @@
       "name": "Stage 2-2: ShareLink CRUD 동작 검증",
       "description": "getOrCreateShareLink() 함수로 새로운 shareId 생성, 재호출 시 기존 ID 반환 확인, getShareLinkByShareId() 조회 테스트",
       "notes": "nanoid 중복 생성 방지, UPSERT 로직으로 원자성 보장 필요",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         {
           "taskId": "c27fc5fb-b84b-4522-abd1-e26a06fa01e6"
         }
       ],
       "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
+      "updatedAt": "2026-02-18T07:50:28.401Z",
       "relatedFiles": [
         {
           "path": "src/lib/supabase/share-links.ts",
@@ -186,7 +186,7 @@
       "name": "Stage 2-3: 로그인/인증 기능 검증",
       "description": "Supabase Auth 구성 확인, 로그인 페이지 테스트, 세션 관리 검증",
       "notes": "Supabase Auth 쿠키 갱신 이슈 가능. @supabase/ssr 공식 패턴 준수 필요",
-      "status": "pending",
+      "status": "in_progress",
       "dependencies": [
         {
           "taskId": "c27fc5fb-b84b-4522-abd1-e26a06fa01e6"
@@ -196,7 +196,7 @@
         }
       ],
       "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
+      "updatedAt": "2026-02-18T07:50:49.161Z",
       "relatedFiles": [
         {
           "path": "src/app/login/page.tsx",

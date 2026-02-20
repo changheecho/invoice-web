@@ -202,21 +202,41 @@ const InvoiceTableBody = async () => {
   let hasError = false
 
   try {
-    // Notion 데이터 소스 쿼리 (네트워크 왕복 제거, 직접 호출)
-    const response = await notionClient.dataSources.query({
-      data_source_id: NOTION_DATABASE_ID,
-      sorts: [
-        {
-          property: '발행일',
-          direction: 'descending',
+    // Notion REST API를 fetch로 직접 호출 (사용자 curl 테스트 기반)
+    console.log('[대시보드] Notion 데이터 조회:', { NOTION_DATABASE_ID })
+
+    const response = await fetch(
+      `https://api.notion.com/v1/databases/${NOTION_DATABASE_ID.replace(/-/g, '')}/query`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NOTION_API_KEY}`,
+          'Notion-Version': '2022-06-28',
+          'Content-Type': 'application/json',
         },
-      ],
-    })
+        body: JSON.stringify({
+          sorts: [
+            {
+              property: '발행일',
+              direction: 'descending',
+            },
+          ],
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.error('Notion API 오류:', errorData)
+      throw new Error(`Notion API 실패: ${response.statusText}`)
+    }
+
+    const data = await response.json()
 
     // Notion 페이지 객체를 InvoiceSummary 타입으로 변환
-    invoices = (response.results as unknown[])
-      .filter((page): page is PageObjectResponse => {
-        return typeof page === 'object' && page !== null && 'properties' in page
+    invoices = data.results
+      .filter((page: any): page is PageObjectResponse => {
+        return page.object === 'page' && 'properties' in page
       })
       .map(transformToInvoiceSummary)
   } catch (error) {
