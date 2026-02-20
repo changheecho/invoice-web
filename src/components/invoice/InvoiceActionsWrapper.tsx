@@ -196,41 +196,38 @@ export const InvoiceActionsWrapper = ({
           }
         }
 
-        // 서버 API로 PDF 전송 (Content-Disposition 헤더 설정)
-        // 이것이 모든 브라우저에서 한글 파일명을 정상 지원하는 유일한 방법
-        console.log('[PDF 다운로드] 서버 API 호출 시작:', { pdfFileName })
+        // ✅ 올바른 해결책: Form Submit으로 API 호출
+        // blob: URL에서는 Content-Disposition 헤더가 작동하지 않으므로
+        // 브라우저의 form submit을 사용하여 API 응답의 헤더를 인식하도록 함
+        console.log('[PDF 다운로드] Form submit 방식으로 API 호출')
 
         // PDF를 data URI로 변환
         const pdfDataUri = pdf.output('datauristring')
 
-        // 서버 API로 POST 요청
-        const apiResponse = await fetch(`/api/invoice/${shareId || 'local'}/pdf`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            pdfBase64: pdfDataUri,
-            pdfFileName: pdfFileName,
-          }),
-        })
+        // Form 요소 생성
+        const form = document.createElement('form')
+        form.method = 'POST'
+        form.action = `/api/invoice/${shareId || 'local'}/pdf`
 
-        if (!apiResponse.ok) {
-          throw new Error(`API 오류: ${apiResponse.status}`)
-        }
+        // Form 필드 추가
+        const baseInput = document.createElement('input')
+        baseInput.type = 'hidden'
+        baseInput.name = 'pdfBase64'
+        baseInput.value = pdfDataUri
+        form.appendChild(baseInput)
 
-        // 서버에서 PDF Blob 받기
-        const pdfBlob = await apiResponse.blob()
+        const filenameInput = document.createElement('input')
+        filenameInput.type = 'hidden'
+        filenameInput.name = 'pdfFileName'
+        filenameInput.value = pdfFileName
+        form.appendChild(filenameInput)
 
-        // Content-Disposition 헤더가 설정된 상태로 다운로드
-        const url = URL.createObjectURL(pdfBlob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = pdfFileName  // 폴백 파일명 (API 헤더가 우선됨)
-        link.click()
-        URL.revokeObjectURL(url)
+        // Form submit (브라우저가 Content-Disposition 헤더를 읽음)
+        document.body.appendChild(form)
+        form.submit()
+        document.body.removeChild(form)
 
-        console.log('[PDF 다운로드] 완료')
+        console.log('[PDF 다운로드] Form submit 완료')
         toast.success('PDF 다운로드가 완료되었습니다')
       } finally {
         // Dark 클래스 복원
