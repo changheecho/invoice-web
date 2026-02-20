@@ -99,8 +99,22 @@ function extractSelect(
 function extractRelationIds(
   property: PageObjectResponse['properties'][string]
 ): string[] {
-  if (!property || property.type !== 'relation') return []
-  return property.relation.map((r: { id: string }) => r.id) || []
+  console.log('[Transform] extractRelationIds 입력:', {
+    hasProperty: !!property,
+    propertyType: property?.type,
+    isRelation: property?.type === 'relation',
+    relationLength: property?.type === 'relation' ? property.relation?.length : 'N/A',
+    relationData: property?.type === 'relation' ? property.relation : 'N/A',
+  })
+
+  if (!property || property.type !== 'relation') {
+    console.log('[Transform] Relation 타입 아님, 빈 배열 반환')
+    return []
+  }
+
+  const ids = property.relation.map((r: { id: string }) => r.id) || []
+  console.log('[Transform] 추출된 Relation ID:', ids)
+  return ids
 }
 
 /**
@@ -189,5 +203,20 @@ export function transformToInvoice(page: PageObjectResponse): Invoice {
  */
 export function extractItemIds(page: PageObjectResponse): string[] {
   const props = page.properties
-  return extractRelationIds(props['Items'] || props['항목'])
+
+  // Debug: 모든 프로퍼티 필드명 출력
+  console.log('[Transform] Invoice 페이지 필드명:', Object.keys(props))
+
+  // Items Relation 필드 찾기 (여러 이름 시도)
+  const itemsField = props['Items'] || props['항목'] || props['상품'] || props['item']
+
+  console.log('[Transform] Items 필드 조회:', {
+    hasItems: !!props['Items'],
+    has항목: !!props['항목'],
+    has상품: !!props['상품'],
+    hasitem: !!props['item'],
+    foundField: itemsField ? 'found' : 'not found',
+  })
+
+  return extractRelationIds(itemsField)
 }

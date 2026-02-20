@@ -13,10 +13,10 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getShareLinkByShareId } from '@/lib/supabase/share-links'
-import { notionClient } from '@/lib/notion/client'
 import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
 import { getInvoiceItems } from '@/lib/notion/items'
 import { buildPdfFilename } from '@/lib/constants'
+import { NOTION_API_KEY } from '@/lib/env'
 import { InvoiceViewer } from '@/components/invoice/InvoiceViewer'
 import { InvoiceActionsWrapper } from '@/components/invoice/InvoiceActionsWrapper'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -35,12 +35,19 @@ export async function generateMetadata(
     const shareLink = await getShareLinkByShareId(shareId)
     if (!shareLink) return { title: '견적서 | Invoice Web' }
 
-    const page = await notionClient.pages.retrieve({
-      page_id: shareLink.notionPageId,
+    const response = await fetch(`https://api.notion.com/v1/pages/${shareLink.notionPageId}`, {
+      headers: {
+        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Notion-Version': '2022-06-28',
+      },
     })
 
+    if (!response.ok) throw new Error('Notion API 오류')
+
+    const page = await response.json() as PageObjectResponse
+
     if ('properties' in page) {
-      const invoice = transformToInvoice(page as PageObjectResponse)
+      const invoice = transformToInvoice(page)
       return {
         title: `${invoice.title} - ${invoice.clientName} | Invoice Web`,
         description: `견적 일자: ${invoice.invoiceDate}`,
@@ -175,26 +182,42 @@ export default async function PublicInvoicePage(
     notFound()
   }
 
-  // 2단계: Notion에서 견적서 상세 데이터 조회
+  // 2단계: Notion에서 견적서 상세 데이터 조회 (fetch 직접 사용 - Relation 데이터 로드 보장)
   let invoice
   try {
-    const page = await notionClient.pages.retrieve({
-      page_id: shareLink.notionPageId,
+    const response = await fetch(`https://api.notion.com/v1/pages/${shareLink.notionPageId}`, {
+      headers: {
+        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Notion-Version': '2022-06-28',
+      },
     })
+
+    if (!response.ok) {
+      throw new Error(`Notion API 오류: ${response.status}`)
+    }
+
+    const page = await response.json() as PageObjectResponse
 
     if (!('properties' in page)) {
       notFound()
     }
 
-    invoice = transformToInvoice(page as PageObjectResponse)
+    invoice = transformToInvoice(page)
 
     // Items Relation ID 추출 및 실제 Items 조회
-    const itemIds = extractItemIds(page as PageObjectResponse)
+    const itemIds = extractItemIds(page)
+    console.log('[공개페이지] Items ID 추출:', { shareId, itemIds, itemIdsLength: itemIds.length })
+
     if (itemIds.length > 0) {
+      console.log('[공개페이지] Items 조회 시작...')
       const items = await getInvoiceItems(itemIds)
+      console.log('[공개페이지] Items 조회 완료:', { itemsCount: items.length, items })
       invoice = { ...invoice, items }
+    } else {
+      console.log('[공개페이지] Items ID가 없음')
     }
-  } catch {
+  } catch (error) {
+    console.error('[공개페이지] 견적서 조회 오류:', error)
     notFound()
   }
 
