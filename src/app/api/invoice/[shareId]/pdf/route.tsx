@@ -15,10 +15,11 @@
 import { NextResponse } from 'next/server'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { getShareLinkByShareId } from '@/lib/supabase/share-links'
-import { notionClient } from '@/lib/notion/client'
-import { transformToInvoice } from '@/lib/notion/transform'
+import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
+import { getInvoiceItems } from '@/lib/notion/items'
 import { InvoicePdfDocument } from '@/components/invoice/invoice-pdf-document'
 import { buildPdfFilename } from '@/lib/constants'
+import { NOTION_API_KEY } from '@/lib/env'
 import type { ApiResponse } from '@/types'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 
@@ -55,10 +56,22 @@ export async function GET(
       )
     }
 
-    // 2단계: Notion에서 견적서 상세 데이터 조회
-    const page = await notionClient.pages.retrieve({
-      page_id: shareLink.notionPageId,
+    // 2단계: Notion에서 견적서 상세 데이터 조회 (fetch 사용)
+    const response = await fetch(`https://api.notion.com/v1/pages/${shareLink.notionPageId}`, {
+      headers: {
+        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Notion-Version': '2022-06-28',
+      },
     })
+
+    if (!response.ok) {
+      return NextResponse.json<ApiResponse<never>>(
+        { success: false, error: '견적서 데이터를 찾을 수 없습니다.' },
+        { status: 404 }
+      )
+    }
+
+    const page = await response.json() as PageObjectResponse
 
     if (!('properties' in page)) {
       return NextResponse.json<ApiResponse<never>>(
@@ -67,10 +80,22 @@ export async function GET(
       )
     }
 
-    const invoice = transformToInvoice(page as PageObjectResponse)
+    let invoice = transformToInvoice(page)
+
+    // Items Relation ID 추출 및 조회
+    const itemIds = extractItemIds(page)
+    if (itemIds.length > 0) {
+      const items = await getInvoiceItems(itemIds, shareLink.notionPageId)
+      invoice = { ...invoice, items }
+    } else {
+      const items = await getInvoiceItems([], shareLink.notionPageId)
+      if (items.length > 0) {
+        invoice = { ...invoice, items }
+      }
+    }
 
     // 3단계: react-pdf/renderer로 PDF 버퍼 생성
-    const pdfBuffer = await renderToBuffer(InvoicePdfDocument({ invoice }))
+    const pdfBuffer = await renderToBuffer(<InvoicePdfDocument invoice={invoice} />)
 
     // 4단계: PDF 파일명 설정 및 응답 반환
     const filename = buildPdfFilename(invoice.clientName, invoice.invoiceDate)

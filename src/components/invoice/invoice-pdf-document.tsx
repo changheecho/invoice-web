@@ -9,6 +9,8 @@
  *
  * @reference https://react-pdf.org/
  */
+import fs from 'fs'
+import path from 'path'
 import {
   Document,
   Page,
@@ -26,24 +28,17 @@ import { INVOICE_STATUS_LABELS, CURRENCY_FORMAT } from '@/lib/constants'
 
 /**
  * Noto Sans KR 폰트 등록
- * Next.js public 디렉토리에 위치한 TTF 파일을 사용합니다.
+ * 프로젝트 public/fonts 디렉토리에 위치한 TTF 파일을 data URI로 등록합니다.
  *
- * @note react-pdf/renderer는 TTF 형식만 지원합니다 (woff2 미지원).
+ * @note react-pdf/renderer는 TTF 형식과 data URI를 지원합니다.
  *       배포 시 public/fonts/NotoSansKR-*.ttf 파일이 필요합니다.
  */
-Font.register({
-  family: 'NotoSansKR',
-  fonts: [
-    {
-      src: '/fonts/NotoSansKR-Regular.ttf',
-      fontWeight: 'normal',
-    },
-    {
-      src: '/fonts/NotoSansKR-Bold.ttf',
-      fontWeight: 'bold',
-    },
-  ],
-})
+// 폰트 등록은 일단 비활성화 (react-pdf 호환성 이슈)
+// TODO: 한글 폰트 문제 해결 필요
+// - 로컬 TTF 파일 직접 로드 시도
+// - 또는 puppeteer 기반 PDF 생성으로 변경
+// const registerFonts = () => { ... }
+// registerFonts()
 
 // ============================================================
 // PDF 스타일시트
@@ -56,7 +51,7 @@ Font.register({
 const styles = StyleSheet.create({
   // 페이지 전체 스타일
   page: {
-    fontFamily: 'NotoSansKR',
+    fontFamily: 'Helvetica', // TODO: 한글 폰트 설정 필요 (현재 기본 폰트 사용)
     fontSize: 10,
     padding: 40,
     backgroundColor: '#ffffff',
