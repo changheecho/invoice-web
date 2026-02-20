@@ -54,15 +54,33 @@ function extractDate(
 
 /**
  * Notion 프로퍼티에서 숫자를 추출합니다.
+ * number 타입과 formula 타입을 모두 지원합니다.
  *
- * @param property - Notion number 타입 프로퍼티
+ * @param property - Notion number 또는 formula 타입 프로퍼티
  * @returns 숫자 (없으면 0)
  */
 function extractNumber(
   property: PageObjectResponse['properties'][string]
 ): number {
-  if (!property || property.type !== 'number') return 0
-  return property.number || 0
+  if (!property) return 0
+
+  // number 타입 처리
+  if (property.type === 'number') {
+    return property.number || 0
+  }
+
+  // formula 타입 처리
+  if (property.type === 'formula') {
+    const formula = property.formula as any
+    if (typeof formula === 'number') {
+      return formula
+    }
+    if (typeof formula === 'object' && formula?.number !== undefined) {
+      return formula.number
+    }
+  }
+
+  return 0
 }
 
 /**

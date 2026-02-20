@@ -30,10 +30,28 @@ function extractText(property: PageObjectResponse['properties'][string]): string
 
 /**
  * Notion 프로퍼티에서 숫자를 추출합니다.
+ * number 타입과 formula 타입을 모두 지원합니다.
  */
 function extractNumber(property: PageObjectResponse['properties'][string]): number {
-  if (!property || property.type !== 'number') return 0
-  return property.number || 0
+  if (!property) return 0
+
+  // number 타입 처리
+  if (property.type === 'number') {
+    return property.number || 0
+  }
+
+  // formula 타입 처리
+  if (property.type === 'formula') {
+    const formula = property.formula as any
+    if (typeof formula === 'number') {
+      return formula
+    }
+    if (typeof formula === 'object' && formula?.number !== undefined) {
+      return formula.number
+    }
+  }
+
+  return 0
 }
 
 /**
@@ -123,7 +141,7 @@ async function getItemsByInvoiceId(invoiceId: string): Promise<InvoiceItem[]> {
 
     // Items DB를 쿼리하며 Invoices Relation 필터로 현재 견적서 찾기
     const response = await fetch(
-      `https://api.notion.com/v1/databases/${NOTION_ITEMS_DATABASE_ID}/query`,
+      `https://api.notion.com/v1/databases/${NOTION_ITEMS_DATABASE_ID.replace(/-/g, '')}/query`,
       {
         method: 'POST',
         headers: {
@@ -149,7 +167,12 @@ async function getItemsByInvoiceId(invoiceId: string): Promise<InvoiceItem[]> {
     )
 
     if (!response.ok) {
-      console.error('[Items] 역방향 쿼리 실패:', response.status)
+      const errorData = await response.json()
+      console.error('[Items] 역방향 쿼리 실패:', {
+        status: response.status,
+        error: errorData.error,
+        message: errorData.message,
+      })
       return []
     }
 
