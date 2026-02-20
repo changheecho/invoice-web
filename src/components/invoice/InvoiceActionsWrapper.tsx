@@ -32,7 +32,7 @@
 import { useState, useCallback } from 'react'
 import { toast } from 'sonner'
 import jsPDF from 'jspdf'
-import { toPng } from 'html-to-image'
+import { toJpeg } from 'html-to-image'
 import { InvoiceActions } from '@/components/invoice/InvoiceActions'
 
 /**
@@ -99,8 +99,9 @@ export const InvoiceActionsWrapper = ({
           return exclusionId !== 'true';
         };
 
-        const dataUrl = await toPng(element, {
-          pixelRatio: 2, // 고해상도 이미지 처리
+        const dataUrl = await toJpeg(element, {
+          pixelRatio: 1.5, // 고해상도 이미지 처리 (2에서 1.5로 줄여 용량 최적화)
+          quality: 0.95, // JPEG 품질 설정
           backgroundColor: '#ffffff',
           skipFonts: false,
           filter: filter,
@@ -130,6 +131,7 @@ export const InvoiceActionsWrapper = ({
           orientation: 'portrait',
           unit: 'mm',
           format: 'a4',
+          compress: true // PDF 내부 압축 활성화
         })
 
         const pageWidth = pdf.internal.pageSize.getWidth()
@@ -165,10 +167,11 @@ export const InvoiceActionsWrapper = ({
             chunkHeight
           )
 
-          const pageImgData = pageCanvas.toDataURL('image/png')
+          // PNG 대신 JPEG 사용 및 약간의 압축으로 용량 대폭 감소
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.9)
           const pageImgHeight = (chunkHeight * imgWidth) / canvas.width
 
-          pdf.addImage(pageImgData, 'PNG', 10, yPos, imgWidth, pageImgHeight)
+          pdf.addImage(pageImgData, 'JPEG', 10, yPos, imgWidth, pageImgHeight)
 
           imgPos += chunkHeight
           if (imgPos < canvas.height) {
