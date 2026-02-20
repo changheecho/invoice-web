@@ -126,11 +126,12 @@ export const InvoiceActionsWrapper = ({
               `
 
               // 모든 요소에 기본 스타일 적용
-              clonedDoc.querySelectorAll('*').forEach((el: any) => {
-                const tagName = el.tagName?.toLowerCase()
+              clonedDoc.querySelectorAll('*').forEach((el) => {
+                const el_ = el as HTMLElement
+                const tagName = el_.tagName?.toLowerCase()
                 // 이미지, 버튼 등은 기본 스타일 유지
                 if (!['img', 'button'].includes(tagName)) {
-                  el.style.cssText = `
+                  el_.style.cssText = `
                     background-color: white !important;
                     color: black !important;
                     border: 1px solid #e5e7eb !important;
@@ -143,9 +144,6 @@ export const InvoiceActionsWrapper = ({
           },
         })
 
-        // 캔버스를 PNG로 변환
-        const imgData = canvas.toDataURL('image/png')
-
         // PDF 생성
         const pdf = new jsPDF({
           orientation: 'portrait',
@@ -156,7 +154,6 @@ export const InvoiceActionsWrapper = ({
         const pageWidth = pdf.internal.pageSize.getWidth()
         const pageHeight = pdf.internal.pageSize.getHeight()
         const imgWidth = pageWidth - 20
-        const imgHeight = (canvas.height * imgWidth) / canvas.width
         const yOffset = 10
 
         // 페이지 높이에 맞게 분할
@@ -199,9 +196,34 @@ export const InvoiceActionsWrapper = ({
           }
         }
 
-        // jsPDF save()가 한글 파일명을 지원하지 않으므로 Blob으로 다운로드
+        // PDF Blob을 Base64로 변환하여 API로 다운로드
+        // (macOS에서 한글 파일명을 제대로 처리하기 위해 API 라우트 사용)
         const pdfBlob = pdf.output('blob')
-        const url = URL.createObjectURL(pdfBlob)
+        const arrayBuffer = await pdfBlob.arrayBuffer()
+        const uint8Array = new Uint8Array(arrayBuffer)
+        let base64Data = ''
+        for (let i = 0; i < uint8Array.length; i++) {
+          base64Data += String.fromCharCode(uint8Array[i])
+        }
+        base64Data = btoa(base64Data)
+
+        // API 라우트에 POST 요청 (Content-Disposition 헤더 설정)
+        const response = await fetch('/api/pdf/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base64Data,
+            fileName: pdfFileName,
+          }),
+        })
+
+        if (!response.ok) {
+          throw new Error('PDF 다운로드 요청 실패')
+        }
+
+        // 응답 Blob을 다운로드 처리
+        const downloadBlob = await response.blob()
+        const url = URL.createObjectURL(downloadBlob)
         const link = document.createElement('a')
         link.href = url
         link.download = pdfFileName
