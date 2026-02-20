@@ -2,22 +2,24 @@
  * API Route: GET /api/invoice/[shareId]/pdf
  *
  * 공유 링크 ID(shareId)로 견적서 데이터를 조회하고
- * react-pdf/renderer를 사용하여 PDF를 생성 후 다운로드를 트리거합니다.
+ * Puppeteer + Google Fonts를 사용하여 PDF를 생성합니다.
+ * 한글이 완벽하게 렌더링되는 고품질 PDF를 생성합니다.
  *
  * @param params.shareId - 공개 공유 링크 ID (nanoid)
  *
  * 처리 흐름:
  * 1. shareId → ShareLink 레코드 조회 (Supabase)
  * 2. notionPageId → Invoice 데이터 조회 (Notion API)
- * 3. Invoice 데이터 → PDF 렌더링 (react-pdf/renderer)
- * 4. PDF Buffer 반환 (Content-Disposition: attachment)
+ * 3. Invoice 데이터 → HTML 생성 (Google Fonts Noto Sans KR 포함)
+ * 4. HTML → PDF 생성 (Puppeteer)
+ * 5. PDF Buffer 반환 (Content-Disposition: attachment)
  */
 import { NextResponse } from 'next/server'
-import { renderToBuffer } from '@react-pdf/renderer'
 import { getShareLinkByShareId } from '@/lib/supabase/share-links'
 import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
 import { getInvoiceItems } from '@/lib/notion/items'
-import { InvoicePdfDocument } from '@/components/invoice/invoice-pdf-document'
+import { generateInvoiceHtml } from '@/components/invoice/invoice-html-template'
+import { htmlToPdf } from '@/lib/pdf/generator'
 import { buildPdfFilename } from '@/lib/constants'
 import { NOTION_API_KEY } from '@/lib/env'
 import type { ApiResponse } from '@/types'
@@ -94,11 +96,14 @@ export async function GET(
       }
     }
 
-    // 3단계: react-pdf/renderer로 PDF 버퍼 생성
-    const pdfBuffer = await renderToBuffer(<InvoicePdfDocument invoice={invoice} />)
+    // 3단계: Invoice 데이터 → HTML 생성
+    const htmlContent = generateInvoiceHtml(invoice)
 
-    // 4단계: PDF 파일명 설정 및 응답 반환
+    // 4단계: Puppeteer + Google Fonts로 PDF 생성
     const filename = buildPdfFilename(invoice.clientName, invoice.invoiceDate)
+    const pdfBuffer = await htmlToPdf(htmlContent)
+
+    // 5단계: PDF 파일명 설정 및 응답 반환
     const encodedFilename = encodeURIComponent(filename)
 
     // Node.js Buffer → Uint8Array로 변환 (Web API Response 호환)

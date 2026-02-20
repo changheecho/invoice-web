@@ -42,12 +42,12 @@ function extractNumber(property: PageObjectResponse['properties'][string]): numb
 
   // formula 타입 처리
   if (property.type === 'formula') {
-    const formula = property.formula as any
+    const formula = property.formula as unknown
     if (typeof formula === 'number') {
       return formula
     }
-    if (typeof formula === 'object' && formula?.number !== undefined) {
-      return formula.number
+    if (typeof formula === 'object' && formula !== null && 'number' in formula) {
+      return (formula as { number: number }).number
     }
   }
 

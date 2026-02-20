@@ -9,15 +9,12 @@
  *
  * @reference https://react-pdf.org/
  */
-import fs from 'fs'
-import path from 'path'
 import {
   Document,
   Page,
   Text,
   View,
   StyleSheet,
-  Font,
 } from '@react-pdf/renderer'
 import type { Invoice } from '@/types'
 import { INVOICE_STATUS_LABELS, CURRENCY_FORMAT } from '@/lib/constants'

@@ -205,11 +205,12 @@ export default async function DashboardInvoicePage(
     }
 
     // Debug: 실제 페이지 데이터 확인
+    const itemsField = page.properties['항목'] as unknown
     console.log('[페이지] 원본 항목 필드:', {
       fieldName: '항목',
       fieldData: page.properties['항목'],
-      fieldType: (page.properties['항목'] as any)?.type,
-      relationData: (page.properties['항목'] as any)?.relation,
+      fieldType: (itemsField && typeof itemsField === 'object' && 'type' in itemsField) ? (itemsField as { type: unknown }).type : undefined,
+      relationData: (itemsField && typeof itemsField === 'object' && 'relation' in itemsField) ? (itemsField as { relation: unknown }).relation : undefined,
     })
 
     invoice = transformToInvoice(page)
