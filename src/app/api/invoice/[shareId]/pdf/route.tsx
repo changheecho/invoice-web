@@ -101,7 +101,21 @@ export async function GET(
     const pdfBuffer = await renderToBuffer(pdfDocument)
 
     // 5단계: PDF 파일명 설정 및 응답 반환
-    const encodedFilename = encodeURIComponent(filename)
+    // RFC 5987 준수: filename*=UTF-8''... 형식으로 UTF-8 인코딩
+    // Next.js Response 헤더는 Latin-1만 지원하므로 한글은 percent-encoding 필수
+    const rfc5987Filename = Buffer.from(filename, 'utf8')
+      .toString('binary')
+      .split('')
+      .map(char => {
+        const code = char.charCodeAt(0)
+        // 허용된 문자 (RFC 5987): ALPHA / DIGIT / "!" / "#" / "$" / "&" / "+" / "-" / "." / "^" / "_" / "`" / "|" / "~"
+        if (/^[A-Za-z0-9!#$&+\-.^_`|~]$/.test(char)) {
+          return char
+        }
+        // 그 외 문자는 percent-encoding (각 바이트를 %XX로)
+        return '%' + code.toString(16).toUpperCase().padStart(2, '0')
+      })
+      .join('')
 
     // Node.js Buffer → Uint8Array로 변환 (Web API Response 호환)
     const uint8Array = new Uint8Array(pdfBuffer)
@@ -109,7 +123,8 @@ export async function GET(
     return new Response(uint8Array, {
       headers: {
         'Content-Type': 'application/pdf',
-        'Content-Disposition': `attachment; filename*=UTF-8''${encodedFilename}`,
+        // RFC 5987 RFC 6266 준수: filename*=UTF-8''... (한글 포함)
+        'Content-Disposition': `attachment; filename*=UTF-8''${rfc5987Filename}`,
         'Content-Length': String(pdfBuffer.length),
       },
     })
