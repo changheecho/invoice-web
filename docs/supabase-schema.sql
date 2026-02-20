@@ -32,7 +32,15 @@ CREATE POLICY "share_links_public_read"
   TO public
   USING (true);
 
--- 서비스 롤 전용 쓰기 정책: Service Role Key로만 INSERT/UPDATE/DELETE 가능
+-- 인증된 사용자 쓰기 정책: 로그인한 사용자는 INSERT/UPDATE/DELETE 가능
+CREATE POLICY "share_links_authenticated_write"
+  ON share_links
+  FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
+
+-- 서비스 롤 전용 쓰기 정책: Service Role Key로도 INSERT/UPDATE/DELETE 가능
 CREATE POLICY "share_links_service_role_write"
   ON share_links
   FOR ALL
