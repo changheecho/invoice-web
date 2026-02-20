@@ -30,8 +30,23 @@ export async function POST(
   await params
 
   try {
-    const body = await request.json()
-    const { pdfBase64, pdfFileName } = body
+    // Form data 또는 JSON 모두 지원
+    let pdfBase64: string
+    let pdfFileName: string
+
+    const contentType = request.headers.get('content-type') || ''
+
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      // Form submit으로 전송된 경우
+      const formData = await request.formData()
+      pdfBase64 = formData.get('pdfBase64') as string
+      pdfFileName = formData.get('pdfFileName') as string
+    } else {
+      // JSON으로 전송된 경우
+      const body = await request.json()
+      pdfBase64 = body.pdfBase64
+      pdfFileName = body.pdfFileName
+    }
 
     if (!pdfBase64 || !pdfFileName) {
       return NextResponse.json(
