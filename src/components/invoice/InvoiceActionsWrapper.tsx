@@ -79,30 +79,132 @@ export const InvoiceActionsWrapper = ({
 
   /**
    * PDF 다운로드 핸들러
-   * html2canvas로 현재 렌더링된 견적서 DOM을 캡처하여
-   * jsPDF로 PDF로 변환하고 다운로드합니다.
+   * html2canvas로 견적서를 이미지로 캡처한 후 jsPDF로 PDF 생성
    */
   const handlePdfClick = useCallback(async () => {
     setIsLoading(true)
     try {
-      // 견적서 DOM 요소 캡처
       const element = document.getElementById('invoice-content')
       if (!element) throw new Error('견적서 영역을 찾을 수 없습니다')
 
-      const canvas = await html2canvas(element, {
-        scale: 2, // 고해상도 (retina)
-        useCORS: true, // 외부 리소스 CORS 허용
-        backgroundColor: '#ffffff',
-      })
-      const imgData = canvas.toDataURL('image/png')
+      // Dark 모드 임시 제거
+      const htmlElement = document.documentElement
+      const hadDarkClass = htmlElement.classList.contains('dark')
+      if (hadDarkClass) htmlElement.classList.remove('dark')
 
-      const pdf = new jsPDF('p', 'mm', 'a4')
-      const pdfWidth = pdf.internal.pageSize.getWidth()
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width
+      try {
+        // DOM을 캔버스로 변환
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          removeContainer: true,
+          // CSS 파싱 오류 무시 - TailwindCSS v4 lab() 함수 호환성 문제 대응
+          onclone: (clonedDoc) => {
+            try {
+              // 모든 style, link 태그 제거 (CSS 파싱 에러 완전 차단)
+              clonedDoc.querySelectorAll('style, link, link[rel="stylesheet"]').forEach(node => {
+                node.parentNode?.removeChild(node)
+              })
 
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
-      pdf.save(pdfFileName)
-      toast.success('PDF 다운로드가 완료되었습니다')
+              // HTML 요소에서도 dark 클래스 제거
+              const htmlElement = clonedDoc.documentElement
+              htmlElement.classList.remove('dark')
+              htmlElement.style.backgroundColor = 'white'
+              htmlElement.style.color = 'black'
+
+              // 기본 문서 스타일 강제 설정
+              const body = clonedDoc.body
+              body.style.cssText = `
+                background-color: white !important;
+                color: black !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+              `
+
+              // 모든 요소에 기본 스타일 적용
+              clonedDoc.querySelectorAll('*').forEach((el: any) => {
+                const tagName = el.tagName?.toLowerCase()
+                // 이미지, 버튼 등은 기본 스타일 유지
+                if (!['img', 'button'].includes(tagName)) {
+                  el.style.cssText = `
+                    background-color: white !important;
+                    color: black !important;
+                    border: 1px solid #e5e7eb !important;
+                  `
+                }
+              })
+            } catch (e) {
+              console.warn('[PDF] 스타일 처리 중 오류:', e)
+            }
+          },
+        })
+
+        // 캔버스를 PNG로 변환
+        const imgData = canvas.toDataURL('image/png')
+
+        // PDF 생성
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4',
+        })
+
+        const pageWidth = pdf.internal.pageSize.getWidth()
+        const pageHeight = pdf.internal.pageSize.getHeight()
+        const imgWidth = pageWidth - 20
+        const imgHeight = (canvas.height * imgWidth) / canvas.width
+        const yOffset = 10
+
+        // 페이지 높이에 맞게 분할
+        let yPos = yOffset
+        let imgPos = 0
+        const maxImgHeightPerPage = (pageHeight - 20) * (canvas.width / imgWidth)
+
+        while (imgPos < canvas.height) {
+          const remainingHeight = canvas.height - imgPos
+          const chunkHeight = Math.min(maxImgHeightPerPage, remainingHeight)
+
+          // 캔버스에서 해당 부분 추출
+          const pageCanvas = document.createElement('canvas')
+          const pageCtx = pageCanvas.getContext('2d')
+
+          pageCanvas.width = canvas.width
+          pageCanvas.height = chunkHeight
+
+          pageCtx?.drawImage(
+            canvas,
+            0,
+            imgPos,
+            canvas.width,
+            chunkHeight,
+            0,
+            0,
+            canvas.width,
+            chunkHeight
+          )
+
+          const pageImgData = pageCanvas.toDataURL('image/png')
+          const pageImgHeight = (chunkHeight * imgWidth) / canvas.width
+
+          pdf.addImage(pageImgData, 'PNG', 10, yPos, imgWidth, pageImgHeight)
+
+          imgPos += chunkHeight
+          if (imgPos < canvas.height) {
+            pdf.addPage()
+            yPos = 10
+          }
+        }
+
+        pdf.save(pdfFileName)
+        toast.success('PDF 다운로드가 완료되었습니다')
+      } finally {
+        // Dark 클래스 복원
+        if (hadDarkClass) htmlElement.classList.add('dark')
+      }
     } catch (error) {
       toast.error('PDF 다운로드에 실패했습니다')
       console.error('[PDF 다운로드] 실패:', error)

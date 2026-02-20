@@ -157,7 +157,7 @@ export function InvoiceViewer({
         // 기본 레이아웃
         'flex flex-col w-full max-w-4xl mx-auto',
         // 배경 및 텍스트 색상
-        'bg-white dark:bg-slate-950',
+        'bg-white',
         // 테두리 및 둥근 모서리
         'border border-border rounded-xl',
         // 그림자
