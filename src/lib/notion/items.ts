@@ -7,7 +7,7 @@
 
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 import type { InvoiceItem } from '@/types'
-import { notionClient } from './client'
+import { NOTION_API_KEY } from '@/lib/env'
 
 /**
  * Notion 페이지에서 텍스트를 추출합니다 (items.ts 내부용).
@@ -54,11 +54,28 @@ export async function getInvoiceItems(itemIds: string[]): Promise<InvoiceItem[]>
   }
 
   try {
-    // 병렬로 모든 Item 페이지 조회 (성능 최적화)
+    // 병렬로 모든 Item 페이지 조회 (fetch 사용, 성능 최적화)
     const itemPages = await Promise.all(
-      itemIds.map((id) =>
-        notionClient.pages.retrieve({ page_id: id }).catch(() => null)
-      )
+      itemIds.map(async (id) => {
+        try {
+          const response = await fetch(`https://api.notion.com/v1/pages/${id}`, {
+            headers: {
+              'Authorization': `Bearer ${NOTION_API_KEY}`,
+              'Notion-Version': '2022-06-28',
+            },
+          })
+
+          if (!response.ok) {
+            console.warn(`[Items] Item 페이지 ${id} 조회 실패: ${response.status}`)
+            return null
+          }
+
+          return (await response.json()) as PageObjectResponse
+        } catch (error) {
+          console.warn(`[Items] Item 페이지 ${id} 조회 오류:`, error)
+          return null
+        }
+      })
     )
 
     // 조회 성공한 페이지만 필터링 및 변환

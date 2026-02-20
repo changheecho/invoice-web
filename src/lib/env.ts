@@ -63,6 +63,13 @@ export const NOTION_API_KEY = process.env.NOTION_API_KEY || ''
  */
 export const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID || ''
 
+/**
+ * Notion Items(라인 아이템) 데이터베이스 ID (서버 전용)
+ * @env NOTION_ITEMS_DATABASE_ID
+ * @security 이 값은 서버 사이드 코드에서만 사용해야 합니다.
+ */
+export const NOTION_ITEMS_DATABASE_ID = process.env.NOTION_ITEMS_DATABASE_ID || ''
+
 // ============================================================
 // 환경 변수 유효성 검사 유틸리티
 // ============================================================
@@ -87,6 +94,7 @@ export function validateEnv(): string[] {
     'SUPABASE_SERVICE_ROLE_KEY',
     'NOTION_API_KEY',
     'NOTION_DATABASE_ID',
+    'NOTION_ITEMS_DATABASE_ID',
   ]
 
   // 설정되지 않은 환경 변수 필터링
