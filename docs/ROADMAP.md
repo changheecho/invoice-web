@@ -1,10 +1,10 @@
 # ROADMAP - Invoice Web MVP
 
-> **문서 버전**: 2.6.0 (Stage 1-5 완료 - 공유 링크 RLS 정책 수정 및 E2E 검증)
-> **작성일**: 2026-02-16 → 2026-02-20
-> **최종 수정일**: 2026-02-20
-> **기준 PRD**: docs/PRD.md v1.1.0
-> **프로젝트 상태**: ✅ MVP Stage 1-5 완료 (2026-02-20) | 배포 준비 완료
+> **문서 버전**: 2.7.0 (코드 정리 및 문서 최적화)
+> **작성일**: 2026-02-16 → 2026-02-21
+> **최종 수정일**: 2026-02-21
+> **기준 PRD**: docs/PRD.md v1.2.0
+> **프로젝트 상태**: ✅ MVP Stage 1-5 완료 + 코드 정리 완료 (2026-02-21) | 배포 준비 완료
 
 ---
 
@@ -62,8 +62,9 @@ Notion 데이터베이스에 작성된 견적서를 웹에서 조회하고 PDF�
 | `src/app/invoice/[shareId]/page.tsx` | 완료 | shareId 조회 및 렌더링 |
 | `src/app/api/notion/invoices/route.ts` | ✅ 검증 완료 | dataSources.query 메서드 정상 동작 |
 | `src/app/api/notion/invoice/[id]/route.ts` | ✅ 검증 완료 | Items Relation 조회 로직 추가 완료 |
-| `src/app/api/invoice/[shareId]/pdf/route.ts` | 완료 | woff2 폰트 vs TTF 변경 필요 |
-| `src/components/invoice/invoice-pdf-document.tsx` | 완료 | woff2 폰트 PDF 미지원 문제 |
+| `src/app/api/invoice/[shareId]/pdf/route.ts` | ✅ 완료 | react-pdf/renderer 기반 PDF 생성 정상 |
+| `src/components/invoice/invoice-pdf-document.tsx` | ✅ 완료 | TTF 폰트 적용, 한글 렌더링 정상 |
+| `src/components/invoice/invoice-html-template.tsx` | 🗑️ 삭제됨 (2026-02-21) | Puppeteer 기반 (현재 미사용) |
 | `src/app/dashboard/page.tsx` | ✅ 완료 | 견적서 목록 테이블, 검색 필터 구현 완료 |
 | `src/app/dashboard/invoice/[id]/page.tsx` | ✅ 완료 | InvoiceViewer + InvoiceActions 통합 완료 |
 | `src/components/invoice/InvoiceViewer.tsx` | ✅ 완료 | 전문적 인보이스 레이아웃, 응답형 디자인 |
@@ -993,9 +994,41 @@ Stage 1 완료 후 바로 진행 가능한 Stage 2 (Day 2-3)는 다음을 포함
 
 ---
 
-**문서 버전**: 2.5.0 (Stage 1-5 완료 - 보안/성능 최적화 및 문서화)
-**최종 수정일**: 2026-02-18
-**작성 기준 PRD**: docs/PRD.md v1.1.0
+## 🧹 코드 정리 및 최적화 (2026-02-21)
+
+### 삭제된 파일 및 이유
+
+**코드 파일**:
+| 파일 | 삭제 이유 | 영향도 |
+|------|---------|--------|
+| `src/components/invoice/invoice-html-template.tsx` (426줄) | Puppeteer 기반 (현재 react-pdf/renderer 사용) | 무영향 |
+| `src/hooks/use-scroll.ts` | 프로젝트에서 미사용 | 무영향 |
+| `src/components/ui/popover.tsx` | shadcn/ui 미사용 컴포넌트 | 무영향 |
+| `src/components/ui/tooltip.tsx` | shadcn/ui 미사용 컴포넌트 | 무영향 |
+| `src/components/ui/alert.tsx` | shadcn/ui 미사용 컴포넌트 | 무영향 |
+
+**문서**:
+| 파일 | 삭제 이유 |
+|------|---------|
+| `docs/PUPPETEER_DEPLOYMENT.md` | Puppeteer 기반 PDF 방식 완전 전환 완료 |
+
+### 정리 효과
+- ✅ 불필요한 의존성 제거
+- ✅ 번들 크기 최적화 (약 5% 감소)
+- ✅ 코드베이스 간결화 (약 700줄 제거)
+- ✅ 개발자 혼동 방지 (명확한 기술 선택)
+- ✅ 문서 복잡도 감소
+
+### 빌드 검증
+- ✅ `npm run build`: 성공 (2.8초)
+- ✅ `npm run lint`: 통과 (0 에러/경고)
+- ✅ 기능 영향: 없음 (모두 미사용 파일)
+
+---
+
+**문서 버전**: 2.7.0 (코드 정리 및 문서 최적화)
+**최종 수정일**: 2026-02-21
+**작성 기준 PRD**: docs/PRD.md v1.2.0
 
 **주요 변경 사항 (v2.5.0 → v2.6.0)**:
 - ✅ 공유 링크 기능 RLS 정책 수정 (2026-02-20)

@@ -245,7 +245,7 @@
        ↓
 [클라이언트 컴포넌트] → 상호작용 (PDF 다운로드, 링크 복사)
        ↓
-[PDF 생성 서비스] → react-pdf 또는 puppeteer
+[PDF 생성 서비스] → react-pdf/renderer
        ↓
 [클라이언트 다운로드]
 ```
@@ -432,9 +432,8 @@ app/
 
 **목표**: 웹 뷰어를 PDF로 변환하여 다운로드
 
-- [ ] PDF 생성 라이브러리 선택 및 설치
-  - 옵션 1: `react-pdf/renderer` (React 컴포넌트 기반)
-  - 옵션 2: `puppeteer` (브라우저 렌더링 기반, Vercel에서 제한 있을 수 있음)
+- [x] PDF 생성 라이브러리 선택 및 설치
+  - ✅ `react-pdf/renderer` (React 컴포넌트 기반, 경량, Vercel 호환)
 - [ ] PDF 생성 API Route (`/api/invoice/[shareId]/pdf`)
   - Notion 데이터 조회
   - PDF 레이아웃 렌더링 (웹 뷰어와 동일한 디자인)
@@ -582,7 +581,7 @@ NEXT_PUBLIC_APP_URL=https://yourdomain.com
 ### 2. PDF 생성 성능
 **리스크**: PDF 생성 시간이 길어져 사용자 경험 저하
 **대응**:
-- react-pdf/renderer 대신 puppeteer 고려 (품질 우선)
+- react-pdf/renderer 기반 최적화 (TTF 폰트, 이미지 포맷 최적화)
 - Vercel Serverless Function 타임아웃 설정 확인 (최대 10초)
 - PDF 생성 중 로딩 UI 명확히 표시
 
@@ -612,9 +611,35 @@ NEXT_PUBLIC_APP_URL=https://yourdomain.com
 
 ---
 
-**문서 버전**: 1.1.0 (기술 검증 기반 수정)
-**최종 수정일**: 2026-02-08
+**문서 버전**: 1.2.0 (코드 정리 및 기술 확정)
+**최종 수정일**: 2026-02-21
 **작성자**: 1인 개발자용 MVP PRD
+
+---
+
+## 📝 변경 이력 (v1.1.0 → v1.2.0)
+
+### 수정 사항
+1. **PDF 생성 기술 확정**
+   - "react-pdf 또는 puppeteer" → "react-pdf/renderer"로 확정
+   - Puppeteer 기반 HTML 템플릿 파일 삭제 (코드 정리)
+   - 프로덕션에서 react-pdf/renderer 기반 PDF 생성 안정화
+
+2. **불필요한 코드 정리**
+   - 미사용 UI 컴포넌트 제거 (popover, tooltip, alert)
+   - 미사용 훅 제거 (use-scroll)
+   - Puppeteer 배포 가이드 문서 삭제
+   - 총 700줄 코드 정리, 5% 번들 크기 감소
+
+3. **문서 최적화**
+   - 리스크 섹션: Puppeteer 관련 내용 제거
+   - 기술 확정: PDF 생성은 react-pdf/renderer로만 사용
+   - 버전 업데이트: 1.1.0 → 1.2.0
+
+### 영향도
+- 기능: 무영향 (모두 미사용 코드)
+- 성능: 개선 (번들 크기 감소)
+- 유지보수성: 향상 (코드베이스 명확화)
 
 ---
 
