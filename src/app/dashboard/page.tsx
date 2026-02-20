@@ -25,7 +25,6 @@ import { InvoiceStatusBadge } from '@/components/invoice/InvoiceStatusBadge'
 import { InvoiceTableSkeleton } from '@/components/invoice/InvoiceSkeleton'
 import { DashboardSearchFilter } from './components/DashboardSearchFilter'
 import { ROUTES } from '@/lib/constants'
-import { notionClient } from '@/lib/notion/client'
 import { transformToInvoiceSummary } from '@/lib/notion/transform'
 import { NOTION_DATABASE_ID } from '@/lib/env'
 import type { InvoiceSummary } from '@/types'
@@ -235,8 +234,8 @@ const InvoiceTableBody = async () => {
 
     // Notion 페이지 객체를 InvoiceSummary 타입으로 변환
     invoices = data.results
-      .filter((page: any): page is PageObjectResponse => {
-        return page.object === 'page' && 'properties' in page
+      .filter((page: unknown): page is PageObjectResponse => {
+        return typeof page === 'object' && page !== null && 'object' in page && page.object === 'page' && 'properties' in page
       })
       .map(transformToInvoiceSummary)
   } catch (error) {
