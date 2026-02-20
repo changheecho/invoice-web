@@ -199,7 +199,17 @@ export const InvoiceActionsWrapper = ({
           }
         }
 
-        pdf.save(pdfFileName)
+        // jsPDF save()가 한글 파일명을 지원하지 않으므로 Blob으로 다운로드
+        const pdfBlob = pdf.output('blob')
+        const url = URL.createObjectURL(pdfBlob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = pdfFileName
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+
         toast.success('PDF 다운로드가 완료되었습니다')
       } finally {
         // Dark 클래스 복원
