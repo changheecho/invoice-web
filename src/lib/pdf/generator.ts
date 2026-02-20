@@ -2,9 +2,11 @@
  * Puppeteer 기반 PDF 생성 유틸리티
  *
  * Google Fonts를 사용하여 한글을 완벽하게 지원하는 PDF 생성 함수를 제공합니다.
+ * Vercel serverless 환경에서는 @sparticuz/chromium을 사용합니다.
  */
 
 import puppeteer from 'puppeteer'
+import chromium from '@sparticuz/chromium'
 
 /**
  * Puppeteer 브라우저 인스턴스 (싱글톤)
@@ -15,8 +17,8 @@ let browserInstance: Awaited<ReturnType<typeof puppeteer.launch>> | null = null
  * Puppeteer 브라우저 인스턴스를 가져옵니다.
  * 로컬 개발과 Vercel 배포 모두에서 작동합니다.
  *
- * 로컬 개발: `PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true` 설정하고 시스템 Chrome 사용
- * Vercel: Vercel 내장 Chromium 사용
+ * 로컬 개발: 시스템 Chrome 사용
+ * Vercel: @sparticuz/chromium 사용 (serverless 최적화)
  *
  * @returns Puppeteer 브라우저 인스턴스
  */
@@ -26,8 +28,20 @@ async function getBrowser() {
   }
 
   try {
-    // Vercel 배포 환경 또는 로컬 시스템 Chrome
-    const executablePath = process.env.PUPPETEER_EXECUTABLE_PATH || undefined
+    // Vercel 환경 감지 (AWS Lambda 또는 다른 serverless)
+    const isServerless = !!process.env.AWS_LAMBDA_FUNCTION_NAME || !!process.env.VERCEL
+
+    let executablePath: string | undefined
+
+    if (isServerless) {
+      // Vercel/AWS Lambda: @sparticuz/chromium 사용
+      // Google Fonts는 HTML에서 @import로 로드됨
+      executablePath = await chromium.executablePath()
+    } else {
+      // 로컬 개발: 시스템 Chrome 사용
+      // executablePath 미설정 시 Puppeteer가 자동으로 감지
+      executablePath = process.env.PUPPETEER_EXECUTABLE_PATH
+    }
 
     browserInstance = await puppeteer.launch({
       headless: true,
@@ -36,6 +50,11 @@ async function getBrowser() {
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage', // Vercel 배포 메모리 제한 대응
+        '--disable-gpu',
+        '--disable-dev-tools',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process', // Vercel serverless 최적화
       ],
     })
 
