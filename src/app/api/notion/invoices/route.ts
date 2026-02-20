@@ -8,7 +8,6 @@
  *           클라이언트에 API 키가 노출되지 않습니다.
  */
 import { NextResponse } from 'next/server'
-import { notionClient } from '@/lib/notion/client'
 import { transformToInvoiceSummary } from '@/lib/notion/transform'
 import { NOTION_DATABASE_ID, validateEnv } from '@/lib/env'
 import { createServerClient } from '@/lib/supabase/server'
@@ -59,26 +58,42 @@ export async function GET() {
   }
 
   try {
-    // @notionhq/client를 사용하여 Notion API 호출
+    // Notion API를 직접 호출 (fetch 사용)
     console.log('[API] Notion 데이터베이스 조회:', {
       NOTION_DATABASE_ID,
       apiKey: process.env.NOTION_API_KEY ? '설정됨' : '미설정',
     })
 
-    const response = await notionClient.databases.query({
-      database_id: NOTION_DATABASE_ID,
-      sorts: [
-        {
-          property: '발행일',
-          direction: 'descending',
+    const response = await fetch(
+      `https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.NOTION_API_KEY}`,
+          'Notion-Version': '2022-06-28',
+          'Content-Type': 'application/json',
         },
-      ],
-    })
+        body: JSON.stringify({
+          sorts: [
+            {
+              property: '발행일',
+              direction: 'descending',
+            },
+          ],
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      throw new Error(`Notion API 오류: ${response.status} ${response.statusText}`)
+    }
+
+    const data = await response.json() as { results: unknown[] }
 
     // Notion 페이지 객체를 InvoiceSummary 타입으로 변환
-    const invoices: InvoiceSummary[] = response.results
+    const invoices: InvoiceSummary[] = data.results
       .filter((page): page is PageObjectResponse => {
-        return page.object === 'page' && 'properties' in page
+        return typeof page === 'object' && page !== null && 'properties' in page
       })
       .map(transformToInvoiceSummary)
 

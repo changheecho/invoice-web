@@ -10,9 +10,9 @@
  * @security 이 엔드포인트는 서버에서 NOTION_API_KEY를 사용합니다.
  */
 import { NextResponse } from 'next/server'
-import { notionClient } from '@/lib/notion/client'
 import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
 import { getInvoiceItems } from '@/lib/notion/items'
+import { NOTION_API_KEY } from '@/lib/env'
 import { createServerClient } from '@/lib/supabase/server'
 import type { Invoice, ApiResponse } from '@/types'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
@@ -50,8 +50,19 @@ export async function GET(
   }
 
   try {
-    // Notion 페이지 상세 조회
-    const page = await notionClient.pages.retrieve({ page_id: id })
+    // Notion 페이지 상세 조회 (fetch 사용)
+    const response = await fetch(`https://api.notion.com/v1/pages/${id}`, {
+      headers: {
+        'Authorization': `Bearer ${NOTION_API_KEY}`,
+        'Notion-Version': '2022-06-28',
+      },
+    })
+
+    if (!response.ok) {
+      throw new Error(`Notion API 오류: ${response.status}`)
+    }
+
+    const page = await response.json() as PageObjectResponse
 
     // 프로퍼티가 없는 응답 타입 처리
     if (!('properties' in page)) {
@@ -62,10 +73,10 @@ export async function GET(
     }
 
     // Invoice 타입으로 변환 (이 시점에서는 items가 빈 배열)
-    let invoice: Invoice = transformToInvoice(page as PageObjectResponse)
+    let invoice: Invoice = transformToInvoice(page)
 
     // Items Relation ID 추출 및 실제 Items 조회
-    const itemIds = extractItemIds(page as PageObjectResponse)
+    const itemIds = extractItemIds(page)
     if (itemIds.length > 0) {
       const items = await getInvoiceItems(itemIds)
       invoice = { ...invoice, items }
