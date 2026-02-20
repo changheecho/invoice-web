@@ -86,15 +86,22 @@ export async function getInvoiceItems(itemIds: string[]): Promise<InvoiceItem[]>
       .map((page) => {
         const props = page.properties
 
+        // Debug: 실제 필드명 및 조회된 데이터 출력
+        console.log('[Items] 페이지 필드명:', Object.keys(props))
+        console.log('[Items] 항목명:', extractText(props['항목명'] || props['Title']))
+        console.log('[Items] 수량:', extractNumber(props['수량'] || props['Quantity']))
+        console.log('[Items] 단가:', extractNumber(props['단가'] || props['Unit Price']))
+        console.log('[Items] 금액:', extractNumber(props['금액'] || props['Subtotal']))
+
         return {
-          // 항목명 - Title 또는 한글 폴백
-          name: extractText(props['Title'] || props['항목명']),
-          // 수량 - Quantity 또는 한글 폴백
-          quantity: extractNumber(props['Quantity'] || props['수량']),
-          // 단가 - Unit Price 또는 한글 폴백
-          unitPrice: extractNumber(props['Unit Price'] || props['단가']),
-          // 소계 - Subtotal 또는 한글 폴백 (formula 읽기 전용)
-          subtotal: extractNumber(props['Subtotal'] || props['금액']),
+          // 항목명 - 한글 먼저, 영문 폴백
+          name: extractText(props['항목명'] || props['Title']),
+          // 수량 - 한글 먼저, 영문 폴백
+          quantity: extractNumber(props['수량'] || props['Quantity']),
+          // 단가 - 한글 먼저, 영문 폴백
+          unitPrice: extractNumber(props['단가'] || props['Unit Price']),
+          // 금액 - 한글 먼저, 영문 폴백 (formula 읽기 전용)
+          subtotal: extractNumber(props['금액'] || props['Subtotal']),
         }
       })
 
