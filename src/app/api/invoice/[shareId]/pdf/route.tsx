@@ -101,8 +101,20 @@ export async function GET(
     const pdfBuffer = await renderToBuffer(pdfDocument)
 
     // 5단계: PDF 파일명 설정 및 응답 반환
+    // 두 가지 형식의 파일명 모두 제공:
+    // 1. filename: ASCII 호환 파일명 (구식 브라우저용)
+    // 2. filename*: RFC 5987 UTF-8 인코딩된 파일명 (최신 브라우저용)
+
+    // ASCII 호환 파일명 생성 (Invoice_[고객사명]_[날짜] 형식)
+    // 클라이언트명을 로마자로 변환 (한글 → "Invoice", 영문은 유지)
+    const asciiClientName = invoice.clientName
+      .replace(/[가-힣]/g, '') // 한글 제거
+      .trim() || 'Invoice' // 결과가 비어있으면 'Invoice' 사용
+    const asciiFilename = `Invoice_${asciiClientName}_${invoice.invoiceDate}.pdf`
+      .replace(/\s+/g, '_') // 공백을 언더스코어로 변경
+      .replace(/[^\w\-.]/g, '_') // 특수문자를 언더스코어로 변경
+
     // RFC 5987 준수: filename*=UTF-8''... 형식으로 UTF-8 인코딩
-    // Next.js Response 헤더는 Latin-1만 지원하므로 한글은 percent-encoding 필수
     const rfc5987Filename = Buffer.from(filename, 'utf8')
       .toString('binary')
       .split('')
@@ -123,8 +135,9 @@ export async function GET(
     return new Response(uint8Array, {
       headers: {
         'Content-Type': 'application/pdf',
-        // RFC 5987 RFC 6266 준수: filename*=UTF-8''... (한글 포함)
-        'Content-Disposition': `attachment; filename*=UTF-8''${rfc5987Filename}`,
+        // RFC 6266 준수: filename (ASCII용) + filename* (UTF-8용)
+        // 브라우저는 filename*를 우선하고, 미지원 시 filename 사용
+        'Content-Disposition': `attachment; filename="${asciiFilename}"; filename*=UTF-8''${rfc5987Filename}`,
         'Content-Length': String(pdfBuffer.length),
       },
     })
