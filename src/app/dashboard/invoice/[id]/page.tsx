@@ -18,7 +18,8 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { notionClient } from '@/lib/notion/client'
-import { transformToInvoice } from '@/lib/notion/transform'
+import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
+import { getInvoiceItems } from '@/lib/notion/items'
 import { getOrCreateShareLink } from '@/lib/supabase/share-links'
 import { ROUTES, buildPdfFilename } from '@/lib/constants'
 import { InvoiceViewer } from '@/components/invoice/InvoiceViewer'
@@ -184,6 +185,13 @@ export default async function DashboardInvoicePage(
     }
 
     invoice = transformToInvoice(page as PageObjectResponse)
+
+    // Items Relation ID 추출 및 실제 Items 조회
+    const itemIds = extractItemIds(page as PageObjectResponse)
+    if (itemIds.length > 0) {
+      const items = await getInvoiceItems(itemIds)
+      invoice = { ...invoice, items }
+    }
   } catch {
     notFound()
   }

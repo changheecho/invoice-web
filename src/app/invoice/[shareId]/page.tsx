@@ -14,7 +14,8 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { getShareLinkByShareId } from '@/lib/supabase/share-links'
 import { notionClient } from '@/lib/notion/client'
-import { transformToInvoice } from '@/lib/notion/transform'
+import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
+import { getInvoiceItems } from '@/lib/notion/items'
 import { buildPdfFilename } from '@/lib/constants'
 import { InvoiceViewer } from '@/components/invoice/InvoiceViewer'
 import { InvoiceActionsWrapper } from '@/components/invoice/InvoiceActionsWrapper'
@@ -186,6 +187,13 @@ export default async function PublicInvoicePage(
     }
 
     invoice = transformToInvoice(page as PageObjectResponse)
+
+    // Items Relation ID 추출 및 실제 Items 조회
+    const itemIds = extractItemIds(page as PageObjectResponse)
+    if (itemIds.length > 0) {
+      const items = await getInvoiceItems(itemIds)
+      invoice = { ...invoice, items }
+    }
   } catch {
     notFound()
   }
