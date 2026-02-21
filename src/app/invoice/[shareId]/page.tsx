@@ -24,6 +24,7 @@ import { InvoiceActionsWrapper } from '@/components/invoice/InvoiceActionsWrappe
 import { InvoiceHeaderSkeleton } from '@/components/invoice/InvoiceHeaderSkeleton'
 import { InvoiceItemsSkeleton } from '@/components/invoice/InvoiceItemsSkeleton'
 import { InvoiceSummarySkeleton } from '@/components/invoice/InvoiceSummarySkeleton'
+import { ViewTracker } from '@/components/invoice/ViewTracker'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 
 /**
@@ -183,14 +184,11 @@ export default async function PublicInvoicePage(
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   const shareUrl = `${appUrl}/invoice/${shareId}`
 
-  // Post-MVP Phase 2: 비동기 조회 기록 저장 (페이지 렌더링에 영향 없음)
-  // await하지 않음 - 병렬 처리로 성능 향상
-  fetch(`${appUrl}/api/invoice/${shareId}/view`, { method: 'POST' }).catch((err) => {
-    console.warn('[PublicInvoicePage] 조회 기록 저장 실패:', err)
-  })
+  // (서버에서 fetch를 호출하면 ISR 캐싱 시 동작하지 않으므로 삭제)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+      <ViewTracker shareId={shareId} />
       <div className="container mx-auto px-4 max-w-4xl py-8 sm:py-12">
 
         {/* 견적서 뷰어 (Suspense 경계) */}

@@ -328,21 +328,21 @@ export function InvoiceViewer({
           <div className="rounded-lg border border-border dark:border-slate-700 overflow-hidden">
             <Table aria-label="견적서 항목 목록">
               <TableHeader>
-                <TableRow className="bg-muted/40 dark:bg-slate-800 hover:bg-muted/40 dark:hover:bg-slate-800">
+                <TableRow className="bg-[#f1f5f9] dark:bg-[#1e293b] hover:bg-[#f1f5f9] dark:hover:bg-[#1e293b]">
                   {/* 항목명: flex-grow */}
-                  <TableHead className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider w-[40%]">
+                  <TableHead className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-[#334155] dark:text-[#cbd5e1] w-[40%]">
                     항목명
                   </TableHead>
                   {/* 수량 */}
-                  <TableHead className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wider">
+                  <TableHead className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wider text-[#334155] dark:text-[#cbd5e1]">
                     수량
                   </TableHead>
                   {/* 단가 */}
-                  <TableHead className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wider">
+                  <TableHead className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wider text-[#334155] dark:text-[#cbd5e1]">
                     단가
                   </TableHead>
                   {/* 소계 */}
-                  <TableHead className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wider">
+                  <TableHead className="px-4 py-3 text-right font-semibold text-xs uppercase tracking-wider text-[#334155] dark:text-[#cbd5e1]">
                     소계
                   </TableHead>
                 </TableRow>
@@ -354,8 +354,8 @@ export function InvoiceViewer({
                     <TableRow
                       key={index}
                       className={cn(
-                        // 홀수 행 줄무늬 배경
-                        index % 2 === 1 && 'bg-muted/20 dark:bg-slate-800/50'
+                        // 홀수 행 줄무늬 배경 (PDF 렌더링 버그 방지를 위해 HEX 강제 지정)
+                        index % 2 === 1 && 'bg-[#f8fafc] dark:bg-[#1e293b]/50'
                       )}
                     >
                       {/* 항목명 */}
@@ -393,14 +393,14 @@ export function InvoiceViewer({
               {invoice.items.length > 0 && (
                 <TableFooter>
                   {/* 소계 행 */}
-                  <TableRow className="bg-muted/30 dark:bg-slate-800 hover:bg-muted/30 dark:hover:bg-slate-800">
+                  <TableRow className="bg-[#f8fafc] dark:bg-[#1e293b] hover:bg-[#f8fafc] dark:hover:bg-[#1e293b] border-t-2 border-[#e2e8f0] dark:border-[#334155]">
                     <TableCell
                       colSpan={3}
-                      className="px-4 py-2.5 text-sm text-right text-muted-foreground font-medium"
+                      className="px-4 py-2.5 text-sm text-right text-[#334155] dark:text-[#cbd5e1] font-bold"
                     >
                       소계
                     </TableCell>
-                    <TableCell className="px-4 py-2.5 text-sm text-right text-foreground tabular-nums font-medium">
+                    <TableCell className="px-4 py-2.5 text-sm text-right text-[#0f172a] dark:text-[#f8fafc] tabular-nums font-bold">
                       {formatCurrency(subtotal)}
                     </TableCell>
                   </TableRow>

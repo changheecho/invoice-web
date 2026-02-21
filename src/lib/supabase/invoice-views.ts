@@ -7,6 +7,8 @@
  * @see /docs/supabase-schema.sql
  */
 
+import { createClient } from '@supabase/supabase-js'
+import { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY } from '@/lib/env'
 import { createServerClient } from '@/lib/supabase/server'
 import type { InvoiceView, ViewStats } from '@/types'
 
@@ -31,10 +33,16 @@ export async function getOrCreateInvoiceView(
   viewerIp?: string,
   userAgent?: string
 ): Promise<InvoiceView> {
-  const supabase = await createServerClient()
+  // 무기명 사용자가 RLS를 우회하여 조회 기록을 남길 수 있도록 Admin 권한 클라이언트 생성
+  const supabaseAdmin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  })
 
   // 1. invoice_views에 조회 기록 추가
-  const { data: view, error: insertError } = await supabase
+  const { data: view, error: insertError } = await supabaseAdmin
     .from('invoice_views')
     .insert({
       share_id: shareId,
@@ -50,7 +58,7 @@ export async function getOrCreateInvoiceView(
   }
 
   // 2. share_links에서 현재 통계 조회
-  const { data: shareLink, error: selectError } = await supabase
+  const { data: shareLink, error: selectError } = await supabaseAdmin
     .from('share_links')
     .select('view_count, first_viewed_at, last_viewed_at')
     .eq('share_id', shareId)
@@ -66,7 +74,7 @@ export async function getOrCreateInvoiceView(
   const firstViewedAt = shareLink?.first_viewed_at || new Date().toISOString()
   const lastViewedAt = new Date().toISOString()
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await supabaseAdmin
     .from('share_links')
     .update({
       view_count: newViewCount,

@@ -87,21 +87,59 @@ export const InvoiceActionsWrapper = ({
       const element = document.getElementById('invoice-content')
       if (!element) throw new Error('견적서 영역을 찾을 수 없습니다')
 
-      // Dark 모드 임시 제거
-      const htmlElement = document.documentElement
-      const hadDarkClass = htmlElement.classList.contains('dark')
-      if (hadDarkClass) htmlElement.classList.remove('dark')
-
       try {
-        // DOM을 이미지로 변환 (html-to-image)
+        // PDF 캡처 시 화면이 깜빡이는 현상(Dark 모드 해제 플래시)을 방지하기 위해
+        // 보이지 않는 iframe을 생성하여 그 안에서 Light 모드로 렌더링 후 캡처합니다.
+        const iframe = document.createElement('iframe')
+        iframe.style.position = 'absolute'
+        iframe.style.top = '-9999px'
+        iframe.style.left = '-9999px'
+        iframe.style.width = `${Math.max(1024, element.scrollWidth)}px`
+        iframe.style.height = `${Math.max(1500, element.scrollHeight + 200)}px`
+        iframe.style.opacity = '0'
+        iframe.style.pointerEvents = 'none'
+        document.body.appendChild(iframe)
+
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
+        if (!iframeDoc) throw new Error('Iframe을 생성할 수 없습니다')
+
+        iframeDoc.open()
+        iframeDoc.write(`
+          <!DOCTYPE html>
+          <html class="light">
+            <head>
+              <base href="${window.location.origin}">
+            </head>
+            <body class="bg-white">
+              <div id="iframe-wrapper" style="padding: 24px;"></div>
+            </body>
+          </html>
+        `)
+        iframeDoc.close()
+
+        // 현재 문서의 스타일과 리소스 링크를 iframe으로 복사
+        Array.from(document.head.childNodes).forEach((node) => {
+          if (node.nodeName === 'STYLE' || node.nodeName === 'LINK') {
+            iframeDoc.head.appendChild(node.cloneNode(true))
+          }
+        })
+
+        // iframe 내부에 견적서 노드 복제
+        const clonedElement = element.cloneNode(true) as HTMLElement
+        iframeDoc.getElementById('iframe-wrapper')?.appendChild(clonedElement)
+
+        // 브라우저가 스타일과 폰트를 불러오고 렌더링을 마칠 수 있도록 대기
+        await new Promise((resolve) => setTimeout(resolve, 800))
+
+        // DOM을 이미지로 변환 (html-to-image) - iframe 내의 요소를 대상으로 캡처
         const filter = (node: HTMLElement) => {
           const exclusionId = node.dataset ? node.dataset.html2pdfIgnore : null;
           return exclusionId !== 'true';
         };
 
-        const dataUrl = await toJpeg(element, {
-          pixelRatio: 1.5, // 고해상도 이미지 처리 (2에서 1.5로 줄여 용량 최적화)
-          quality: 0.95, // JPEG 품질 설정
+        const dataUrl = await toJpeg(clonedElement, {
+          pixelRatio: 2.5, // 텍스트 가독성을 위해 해상도 증가 (기존 1.5)
+          quality: 1.0, // 텍스트 깨짐 방지를 위해 최대 품질 설정
           backgroundColor: '#ffffff',
           skipFonts: false,
           filter: filter,
@@ -110,6 +148,9 @@ export const InvoiceActionsWrapper = ({
             transformOrigin: 'top left'
           }
         })
+
+        // 작업 완료 후 iframe 제거
+        document.body.removeChild(iframe)
 
         // 이미지를 캔버스로 변환하여 기존 jsPDF 분할 로직 재사용
         const img = new Image()
@@ -167,8 +208,8 @@ export const InvoiceActionsWrapper = ({
             chunkHeight
           )
 
-          // PNG 대신 JPEG 사용 및 약간의 압축으로 용량 대폭 감소
-          const pageImgData = pageCanvas.toDataURL('image/jpeg', 0.9)
+          // 가독성 확보를 위해 JPEG 변환 품질을 1.0으로 상향
+          const pageImgData = pageCanvas.toDataURL('image/jpeg', 1.0)
           const pageImgHeight = (chunkHeight * imgWidth) / canvas.width
 
           pdf.addImage(pageImgData, 'JPEG', 10, yPos, imgWidth, pageImgHeight)
@@ -213,9 +254,8 @@ export const InvoiceActionsWrapper = ({
 
         console.log('[PDF 다운로드] Form submit 완료')
         toast.success('PDF 다운로드가 완료되었습니다')
-      } finally {
-        // Dark 클래스 복원
-        if (hadDarkClass) htmlElement.classList.add('dark')
+      } catch (innerError) {
+        throw innerError
       }
     } catch (error) {
       toast.error('PDF 다운로드에 실패했습니다')

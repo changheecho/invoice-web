@@ -12,7 +12,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Copy, ChevronRight, Check } from 'lucide-react'
+import { Copy, ChevronRight, Check, ChevronDown } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
@@ -21,10 +21,22 @@ import {
   TableCell,
   TableRow,
 } from '@/components/ui/table'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu'
 import { InvoiceStatusBadge } from '@/components/invoice/InvoiceStatusBadge'
 import { InvoiceViewStatusBadge } from '@/components/invoice/InvoiceViewStatusBadge'
 import { ROUTES } from '@/lib/constants'
 import type { InvoiceSummary } from '@/types'
+
+/**
+ * 복사 포맷 타입
+ */
+type CopyFormat = 'url' | 'markdown' | 'text'
 
 /**
  * 금액을 한국 원화 형식으로 포맷합니다.
@@ -38,6 +50,26 @@ const formatAmount = (amount: number): string => {
  */
 const formatDate = (dateString: string): string => {
   return dateString.split('T')[0]
+}
+
+/**
+ * 복사 포맷에 따라 URL을 가공합니다.
+ */
+const formatCopyText = (
+  shareUrl: string,
+  format: CopyFormat,
+  clientName: string
+): string => {
+  switch (format) {
+    case 'url':
+      return shareUrl
+    case 'markdown':
+      return `[견적서_${clientName}](${shareUrl})`
+    case 'text':
+      return `${clientName}: ${shareUrl}`
+    default:
+      return shareUrl
+  }
 }
 
 interface InvoiceTableRowClientProps {
@@ -64,9 +96,9 @@ export const InvoiceTableRowClient = ({
   /**
    * 공유 링크 복사 핸들러
    * POST /api/share-links를 호출하여 링크를 생성 또는 조회한 후
-   * 클립보드에 복사합니다.
+   * 선택한 포맷으로 클립보드에 복사합니다.
    */
-  const handleCopyLink = async () => {
+  const handleCopyLink = async (format: CopyFormat = 'url') => {
     setIsCopying(true)
     setCopySuccess(false)
 
@@ -90,9 +122,22 @@ export const InvoiceTableRowClient = ({
 
       // 링크 복사
       if (data.success && data.data?.shareUrl) {
-        await navigator.clipboard.writeText(data.data.shareUrl)
+        // 선택한 포맷으로 텍스트 가공
+        const textToCopy = formatCopyText(
+          data.data.shareUrl,
+          format,
+          invoice.clientName
+        )
 
-        toast.success('링크가 복사되었습니다')
+        await navigator.clipboard.writeText(textToCopy)
+
+        const formatLabel = {
+          url: 'URL',
+          markdown: '마크다운',
+          text: '텍스트',
+        }[format]
+
+        toast.success(`${formatLabel}이(가) 복사되었습니다`)
         setCopySuccess(true)
 
         // 2초 후 성공 상태 해제
@@ -156,26 +201,58 @@ export const InvoiceTableRowClient = ({
       {/* 액션 버튼 */}
       <TableCell>
         <div className="flex items-center justify-end gap-1">
-          {/* 복사 버튼 */}
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            onClick={handleCopyLink}
-            disabled={isCopying}
-            aria-label={`${invoice.clientName} 견적서 공유 링크 복사`}
-            title="공유 링크 복사"
-            className={cn(
-              'text-muted-foreground hover:text-foreground',
-              'opacity-0 group-hover:opacity-100 transition-opacity',
-              copySuccess && 'text-green-600 dark:text-green-400'
-            )}
-          >
-            {copySuccess ? (
-              <Check className="h-4 w-4" aria-hidden="true" />
-            ) : (
-              <Copy className="h-4 w-4" aria-hidden="true" />
-            )}
-          </Button>
+          {/* 복사 버튼 - 드롭다운 메뉴 */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                disabled={isCopying}
+                aria-label={`${invoice.clientName} 견적서 공유 링크 복사 (포맷 선택)`}
+                title="공유 링크 복사"
+                className={cn(
+                  'text-muted-foreground hover:text-foreground',
+                  'opacity-0 group-hover:opacity-100 transition-opacity',
+                  copySuccess && 'text-green-600 dark:text-green-400'
+                )}
+              >
+                <div className="flex items-center gap-0.5">
+                  {copySuccess ? (
+                    <Check className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Copy className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  <ChevronDown className="h-3 w-3" aria-hidden="true" />
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuItem
+                onClick={() => handleCopyLink('url')}
+                disabled={isCopying}
+              >
+                <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span>URL 복사</span>
+                <span className="ml-auto text-xs text-muted-foreground">
+                  기본
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleCopyLink('markdown')}
+                disabled={isCopying}
+              >
+                <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span>마크다운 복사</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleCopyLink('text')}
+                disabled={isCopying}
+              >
+                <Copy className="mr-2 h-4 w-4" aria-hidden="true" />
+                <span>텍스트 복사</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* 상세보기 버튼 */}
           <Button

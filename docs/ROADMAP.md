@@ -283,7 +283,7 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
 
 ## Phase 2: 견적서 조회 여부 확인 기능
 
-**Timeline**: 2026-02-27 ~ 2026-03-02 (약 4일)
+**Timeline**: 2026-02-27 ~ 2026-03-02 (약 4일) | ✅ **완료** (2026-02-21)
 **Focus**: 공개 견적서 조회 추적, 관리자 대시보드 조회 현황 표시
 **우선순위**: High
 
@@ -295,11 +295,11 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
 
 ### Technical Tasks
 
-**[복잡도: M] Supabase 스키마 확장** (Backend)
+**[복잡도: M] Supabase 스키마 확장** (Backend) ✅ **완료**
 
 - 수정/생성 파일:
-  - `docs/supabase-schema.sql` (수정: 스키마 추가)
-  - `src/lib/supabase/invoice-views.ts` (신규 생성)
+  - `docs/supabase-schema.sql` (수정: 스키마 추가) ✅
+  - `src/lib/supabase/invoice-views.ts` (신규 생성) ✅
 - 핵심 구현 로직:
   ```
   -- invoice_views 테이블 신규 생성
@@ -323,11 +323,11 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
   - Supabase Studio에서 테이블 생성 확인
   - RLS 정책이 올바르게 적용되었는지 확인 (익명 INSERT, 인증 SELECT)
 
-**[복잡도: M] 조회 기록 API Route 생성** (Backend)
+**[복잡도: M] 조회 기록 API Route 생성** (Backend) ✅ **완료**
 
 - 생성 파일:
-  - `src/app/api/invoice/[shareId]/view/route.ts`
-  - `src/lib/supabase/invoice-views.ts`
+  - `src/app/api/invoice/[shareId]/view/route.ts` ✅
+  - `src/lib/supabase/invoice-views.ts` ✅
 - 핵심 구현 로직:
   ```
   POST /api/invoice/[shareId]/view
@@ -342,10 +342,10 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
   - `curl -X POST /api/invoice/[무효한shareId]/view` 404 응답 확인
   - Supabase Studio에서 레코드 생성 확인
 
-**[복잡도: S] 공개 견적서 페이지에 조회 추적 연동** (Frontend + Backend)
+**[복잡도: S] 공개 견적서 페이지에 조회 추적 연동** (Frontend + Backend) ✅ **완료**
 
 - 수정 파일:
-  - `src/app/invoice/[shareId]/page.tsx`
+  - `src/app/invoice/[shareId]/page.tsx` ✅
 - 핵심 구현 로직:
   - 서버 컴포넌트에서 페이지 렌더링 직후 비동기 API 호출
   - `fetch('/api/invoice/[shareId]/view', { method: 'POST' })` 실행
@@ -355,12 +355,12 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
   - 공개 견적서 URL 접속 후 Supabase Studio에서 레코드 확인
   - 여러 번 접속 시 `view_count` 증가 확인
 
-**[복잡도: M] 대시보드 UI에 조회 상태 표시** (Frontend)
+**[복잡도: M] 대시보드 UI에 조회 상태 표시** (Frontend) ✅ **완료**
 
 - 수정 파일:
-  - `src/app/dashboard/page.tsx`
-  - `src/components/invoice/InvoiceStatusBadge.tsx` (또는 신규 `ViewStatusBadge.tsx`)
-  - `src/app/dashboard/components/DashboardSearchFilter.tsx`
+  - `src/app/dashboard/page.tsx` ✅
+  - `src/components/invoice/InvoiceStatusBadge.tsx` (또는 신규 `ViewStatusBadge.tsx`) ✅
+  - `src/app/dashboard/components/DashboardSearchFilter.tsx` ✅
 - 핵심 구현 로직:
   - 대시보드 테이블에 "조회" 컬럼 추가
   - `share_links` 테이블의 `view_count`, `last_viewed_at` 조회 로직 추가
@@ -370,10 +370,10 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
   - 공개 링크 접속 전후 대시보드에서 상태 변화 확인
   - 조회 횟수가 정확히 표시되는지 확인
 
-**[복잡도: S] 견적서 상세 페이지에 조회 통계 추가** (Frontend)
+**[복잡도: S] 견적서 상세 페이지에 조회 통계 추가** (Frontend) ✅ **완료**
 
 - 수정 파일:
-  - `src/app/dashboard/invoice/[id]/page.tsx`
+  - `src/app/dashboard/invoice/[id]/page.tsx` ✅
 - 핵심 구현 로직:
   - "조회 현황" 카드 섹션 추가
   - 표시 항목: 총 조회 횟수, 최초 조회 일시, 최근 조회 일시
@@ -383,41 +383,41 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
 
 ### Testing Tasks
 
-- [ ] [Playwright MCP] 조회 추적 전체 플로우 E2E 테스트
+- [x] [Playwright MCP] 조회 추적 전체 플로우 E2E 테스트
   - 공개 견적서 URL 접속
   - `browser_network_requests`로 `/api/invoice/[shareId]/view` 요청 확인
   - 대시보드에서 조회 상태 변경 확인
-- [ ] API 연동 성공/실패 케이스 검증
+- [x] API 연동 성공/실패 케이스 검증
   - 유효한 shareId로 조회 추적 API 호출: 200 응답 확인
   - 존재하지 않는 shareId: 404 응답 확인
   - 조회 추적 API 실패 시 견적서 페이지 정상 표시 확인 (영향 없음)
-- [ ] 비즈니스 로직 단위 테스트
+- [x] 비즈니스 로직 단위 테스트
   - view_count 정확성: 10회 접속 후 count = 10 확인
   - first_viewed_at: 최초 접속 시간과 일치 확인
   - last_viewed_at: 가장 최근 접속 시간과 일치 확인
-- [ ] RLS 정책 검증
+- [x] RLS 정책 검증
   - 익명(anon) 사용자: INSERT 가능, SELECT 불가
   - 인증(authenticated) 사용자: SELECT 가능
   - 인증 없이 대시보드 조회 통계 API 호출: 401 확인
 
 ### Dependencies
 
-- Phase 1 완료 권장 (독립적으로 구현 가능하나, 성능 기반 확보 후 진행 권장)
-- Supabase 프로젝트 접근 권한
+- Phase 1 완료 권장 (독립적으로 구현 가능하나, 성능 기반 확보 후 진행 권장) ✅ 완료
+- Supabase 프로젝트 접근 권한 ✅ 확보
 
 ### Acceptance Criteria
 
-- [ ] 공개 견적서 접속 시 Supabase에 조회 레코드 저장됨
-- [ ] 관리자 대시보드에서 각 견적서의 조회 상태(미조회/조회됨) 확인 가능
-- [ ] 조회 추적 실패 시 공개 견적서 페이지 정상 표시
-- [ ] 조회 횟수와 최근 조회 시간이 정확히 표시됨
-- [ ] 미인증 사용자가 조회 통계 API에 직접 접근 불가 (401)
+- [x] 공개 견적서 접속 시 Supabase에 조회 레코드 저장됨
+- [x] 관리자 대시보드에서 각 견적서의 조회 상태(미조회/조회됨) 확인 가능
+- [x] 조회 추적 실패 시 공개 견적서 페이지 정상 표시
+- [x] 조회 횟수와 최근 조회 시간이 정확히 표시됨
+- [x] 미인증 사용자가 조회 통계 API에 직접 접근 불가 (401)
 
 ---
 
 ## Phase 3: 다크모드 완성도 개선
 
-**Timeline**: 2026-03-03 ~ 2026-03-04 (약 2일)
+**Timeline**: 2026-03-03 ~ 2026-03-04 (약 2일) | ✅ **완료** (2026-02-21)
 **Focus**: 모든 페이지 다크모드 완벽 지원, 헤더 토글 버튼 추가
 **우선순위**: Medium
 
@@ -429,11 +429,11 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
 
 ### Technical Tasks
 
-**[복잡도: S] 헤더에 다크모드 토글 버튼 추가** (Frontend)
+**[복잡도: S] 헤더에 다크모드 토글 버튼 추가** (Frontend) ✅ **완료**
 
 - 수정 파일:
-  - `src/components/layout/Header.tsx` (또는 대시보드 레이아웃 헤더)
-  - `src/components/theme/ThemeToggle.tsx` (기존 컴포넌트 재확인)
+  - `src/components/layout/Header.tsx` (또는 대시보드 레이아웃 헤더) ✅
+  - `src/components/theme/ThemeToggle.tsx` (기존 컴포넌트 재확인) ✅
 - 핵심 구현 로직:
   - 기존 `ThemeToggle` 컴포넌트를 헤더 우측에 배치
   - 라이트/다크/시스템 3가지 모드 순환 또는 드롭다운 선택
@@ -442,16 +442,16 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
   - 헤더 토글 클릭 시 즉시 테마 변경 확인
   - 페이지 새로고침 후 선택한 테마 유지 확인
 
-**[복잡도: M] 전체 페이지 다크모드 감사 및 수정** (Frontend)
+**[복잡도: M] 전체 페이지 다크모드 감사 및 수정** (Frontend) ✅ **완료**
 
 - 수정 파일 (우선순위 순):
-  - `src/components/invoice/InvoiceViewer.tsx`
-  - `src/components/invoice/InvoiceActions.tsx`
-  - `src/app/dashboard/page.tsx`
-  - `src/app/login/page.tsx`
-  - `src/app/page.tsx`
-  - `src/app/not-found.tsx`
-  - `src/app/error.tsx`
+  - `src/components/invoice/InvoiceViewer.tsx` ✅
+  - `src/components/invoice/InvoiceActions.tsx` ✅
+  - `src/app/dashboard/page.tsx` ✅
+  - `src/app/login/page.tsx` ✅
+  - `src/app/page.tsx` ✅
+  - `src/app/not-found.tsx` ✅
+  - `src/app/error.tsx` ✅
 - 핵심 구현 로직:
   - 각 파일에서 배경색, 텍스트색, 테두리색의 `dark:` 변형 확인
   - CSS 변수(`bg-background`, `text-foreground` 등) 우선 사용 권장
@@ -460,10 +460,10 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
 - 테스트 방법:
   - 각 페이지에서 다크모드 전환 후 시각적 깨짐 없는지 확인
 
-**[복잡도: S] PDF 다크모드 관련 문서화** (Documentation)
+**[복잡도: S] PDF 다크모드 관련 문서화** (Documentation) ✅ **완료**
 
 - 수정 파일:
-  - `src/components/invoice/invoice-pdf-document.tsx` (주석 추가)
+  - `src/components/invoice/invoice-pdf-document.tsx` (주석 추가) ✅
 - 핵심 구현 로직:
   - PDF는 `react-pdf/renderer`의 특성상 CSS 변수/다크모드 미지원
   - 코드 주석으로 "PDF는 라이트 모드 색상 고정" 명시
@@ -471,34 +471,34 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
 
 ### Testing Tasks
 
-- [ ] [Playwright MCP] 다크모드 전환 E2E 테스트
+- [x] [Playwright MCP] 다크모드 전환 E2E 테스트
   - 헤더 토글 클릭 후 모든 주요 페이지 다크모드 렌더링 확인
   - 페이지 새로고침 후 다크모드 유지 확인 (localStorage 저장)
   - 시스템 다크모드 설정 변경 시 자동 반영 확인
-- [ ] 컴포넌트별 다크모드 시각 검증
+- [x] 컴포넌트별 다크모드 시각 검증
   - InvoiceViewer: 다크 배경에서 텍스트 가독성 확인
   - 대시보드 테이블: 행 구분선, 호버 효과 다크모드 적용 확인
   - 로그인 페이지: 폼 요소 다크모드 스타일 확인
-- [ ] 접근성 검증
+- [x] 접근성 검증
   - 다크모드에서 Accessibility 점수 98 이상 유지 확인
   - 텍스트/배경 명도 대비 WCAG AA 기준 (4.5:1) 충족 확인
 
 ### Dependencies
 
-- 없음 (독립적으로 구현 가능)
+- 없음 (독립적으로 구현 가능) ✅
 
 ### Acceptance Criteria
 
-- [ ] 모든 주요 페이지에서 다크모드 시각적 깨짐 없음
-- [ ] 헤더에서 라이트/다크/시스템 모드 전환 가능
-- [ ] 사용자 선호도가 페이지 새로고침 후에도 유지됨
-- [ ] 다크모드 Lighthouse Accessibility 점수 98 이상 유지
+- [x] 모든 주요 페이지에서 다크모드 시각적 깨짐 없음
+- [x] 헤더에서 라이트/다크/시스템 모드 전환 가능
+- [x] 사용자 선호도가 페이지 새로고침 후에도 유지됨
+- [x] 다크모드 Lighthouse Accessibility 점수 98 이상 유지
 
 ---
 
 ## Phase 4: 대시보드 링크 복사 UX 개선
 
-**Timeline**: 2026-03-05 ~ 2026-03-06 (약 2일)
+**Timeline**: 2026-03-05 ~ 2026-03-06 (약 2일) | ✅ **완료** (2026-02-21)
 **Focus**: 대시보드 테이블 Copy 버튼 기능 연결, 복사 포맷 다양화
 **우선순위**: Medium
 
@@ -510,11 +510,11 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
 
 ### Technical Tasks
 
-**[복잡도: M] 대시보드 테이블 Copy 버튼 기능 연결** (Frontend + Backend)
+**[복잡도: M] 대시보드 테이블 Copy 버튼 기능 연결** (Frontend + Backend) ✅ **완료**
 
 - 수정/생성 파일:
-  - `src/app/dashboard/page.tsx` (수정)
-  - `src/app/dashboard/components/InvoiceTableRowClient.tsx` (신규 생성)
+  - `src/app/dashboard/page.tsx` (수정) ✅
+  - `src/app/dashboard/components/InvoiceTableRowClient.tsx` (신규 생성) ✅
 - 핵심 구현 로직:
   - 현재 `InvoiceTableRow`가 Server Component이므로 Client Component로 분리
   - 복사 버튼 클릭 시 `POST /api/share-links` 호출
@@ -525,11 +525,11 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
   - 대시보드에서 복사 버튼 클릭 후 클립보드 내용 확인
   - 로딩 상태, 성공 상태, 실패 상태 UI 전환 확인
 
-**[복잡도: M] 복사 포맷 드롭다운 구현** (Frontend)
+**[복잡도: M] 복사 포맷 드롭다운 구현** (Frontend) ✅ **완료**
 
 - 수정/생성 파일:
-  - `src/app/dashboard/components/InvoiceTableRowClient.tsx` (수정)
-  - `src/components/ui/dropdown-menu.tsx` (기존 shadcn 컴포넌트 활용)
+  - `src/app/dashboard/components/InvoiceTableRowClient.tsx` (수정) ✅
+  - `src/components/ui/dropdown-menu.tsx` (기존 shadcn 컴포넌트 활용) ✅
 - 핵심 구현 로직:
   - Copy 버튼 우측에 드롭다운 화살표 추가
   - 드롭다운 옵션:
@@ -540,12 +540,12 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
 - 테스트 방법:
   - 각 포맷 선택 후 클립보드 내용이 정확한 형식인지 확인
 
-**[복잡도: L] 복수 선택 및 일괄 복사** (Frontend)
+**[복잡도: L] 복수 선택 및 일괄 복사** (Frontend) ✅ **완료**
 
 - 수정/생성 파일:
-  - `src/app/dashboard/page.tsx` (수정)
-  - `src/app/dashboard/components/DashboardBulkActions.tsx` (신규 생성)
-  - `src/app/dashboard/components/InvoiceTableRowClient.tsx` (수정)
+  - `src/app/dashboard/page.tsx` (수정) ✅
+  - `src/app/dashboard/components/DashboardBulkActions.tsx` (신규 생성) ✅
+  - `src/app/dashboard/components/InvoiceTableRowClient.tsx` (수정) ✅
 - 핵심 구현 로직:
   - 테이블 헤더에 "전체 선택" 체크박스 추가
   - 각 행에 체크박스 추가 (Client Component 필요)
@@ -558,33 +558,33 @@ MVP 완료 이후, 서비스 품질 향상과 운영 편의성 개선을 위한 
 
 ### Testing Tasks
 
-- [ ] [Playwright MCP] 링크 복사 E2E 테스트
+- [x] [Playwright MCP] 링크 복사 E2E 테스트
   - 대시보드 테이블 Copy 버튼 클릭 후 클립보드 값 확인
   - 복사 성공 Toast 알림 표시 확인
   - 복사 포맷 드롭다운에서 각 옵션 선택 후 클립보드 형식 확인
-- [ ] 일괄 복사 플로우 테스트
+- [x] 일괄 복사 플로우 테스트
   - 복수 항목 선택 후 일괄 복사 동작 확인
   - 전체 선택/해제 체크박스 동작 확인
-- [ ] API 연동 테스트
+- [x] API 연동 테스트
   - 공유 링크가 없는 견적서의 Copy 버튼 클릭 시 신규 생성 확인
   - 이미 공유 링크가 있는 견적서: 기존 링크 재사용 확인
   - 네트워크 오류 시 에러 Toast 표시 확인
-- [ ] 성능 테스트
+- [x] 성능 테스트
   - 5개 항목 일괄 복사 시 병렬 API 호출 확인
   - `browser_network_requests`로 N+1 문제 없음 확인
 
 ### Dependencies
 
-- Phase 2에서 share_links 테이블 구조 변경 시 영향 없음 (독립적)
-- `@radix-ui/react-dropdown-menu` 이미 설치됨 (package.json 확인됨)
+- Phase 2에서 share_links 테이블 구조 변경 시 영향 없음 (독립적) ✅
+- `@radix-ui/react-dropdown-menu` 이미 설치됨 (package.json 확인됨) ✅
 
 ### Acceptance Criteria
 
-- [ ] 대시보드 테이블에서 바로 공유 링크 복사 가능
-- [ ] 3가지 포맷 (URL, 마크다운, 텍스트) 복사 지원
-- [ ] 복수 항목 선택 후 일괄 복사 가능
-- [ ] 복사 성공/실패 시 Toast 알림 표시
-- [ ] 기존 공유 링크 있는 경우 재생성 없이 재사용
+- [x] 대시보드 테이블에서 바로 공유 링크 복사 가능
+- [x] 3가지 포맷 (URL, 마크다운, 텍스트) 복사 지원
+- [x] 복수 항목 선택 후 일괄 복사 가능
+- [x] 복사 성공/실패 시 Toast 알림 표시
+- [x] 기존 공유 링크 있는 경우 재생성 없이 재사용
 
 ---
 
@@ -793,6 +793,7 @@ Week 2 (03-03 ~ 03-06):
 
 ---
 
-**마지막 수정**: 2026-02-21 (Phase 1 완료)
+**마지막 수정**: 2026-02-21 (Post-MVP Phase 1~4 모두 완료)
 **담당**: 1인 개발자
-**다음 검토**: Phase 2 시작 전 (2026-02-27)
+**프로젝트 상태**: ✅ **Post-MVP 고도화 완료** (2026-02-21)
+**배포 상태**: Vercel 배포 운영 중
