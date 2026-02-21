@@ -25,6 +25,7 @@ import { InvoiceStatusBadge } from '@/components/invoice/InvoiceStatusBadge'
 import { InvoiceViewStatusBadge } from '@/components/invoice/InvoiceViewStatusBadge'
 import { InvoiceTableSkeleton } from '@/components/invoice/InvoiceSkeleton'
 import { DashboardSearchFilter } from './components/DashboardSearchFilter'
+import { DashboardTableWrapper } from './components/DashboardTableWrapper'
 import { ROUTES } from '@/lib/constants'
 import { transformToInvoiceSummary } from '@/lib/notion/transform'
 import { NOTION_DATABASE_ID } from '@/lib/env'
@@ -210,9 +211,9 @@ const EmptyState = () => (
 )
 
 /**
- * 견적서 테이블 본체 컴포넌트
+ * 견적서 테이블 데이터 조회 컴포넌트
  *
- * Notion 데이터베이스에서 견적서 목록을 조회하여 TableBody를 렌더링합니다.
+ * Notion 데이터베이스에서 견적서 목록을 조회합니다.
  *
  * 캐싱 전략:
  * - `next: { revalidate: 60 }` 옵션으로 60초간 응답을 캐시합니다.
@@ -223,7 +224,7 @@ const EmptyState = () => (
  * - 데이터 로딩 중에는 InvoiceTableSkeleton이 표시됩니다.
  * - DashboardSearchFilter는 Suspense 외부에 있으므로 즉시 표시됩니다.
  */
-const InvoiceTableBody = async () => {
+const InvoiceTableData = async () => {
   // 데이터 조회를 try/catch로 감싸고, JSX 구성은 외부에서 처리
   let invoices: InvoiceSummary[] = []
   let hasError = false
@@ -300,18 +301,8 @@ const InvoiceTableBody = async () => {
     })
   )
 
-  return (
-    <TableBody>
-      {invoicesWithViewStats.map(({ invoice, viewCount, lastViewedAt }) => (
-        <InvoiceTableRowClient
-          key={invoice.id}
-          invoice={invoice}
-          viewCount={viewCount}
-          lastViewedAt={lastViewedAt}
-        />
-      ))}
-    </TableBody>
-  )
+  // DashboardTableWrapper에 데이터를 전달
+  return <DashboardTableWrapper data={invoicesWithViewStats} />
 }
 
 // ============================================================
@@ -383,7 +374,7 @@ export default async function DashboardPage(_props: DashboardPageProps) {
 
       {/* ====================================================
           견적서 테이블 영역
-          - InvoiceTableBody는 Suspense 경계 내부에 배치하여 비동기 렌더링을 지원합니다.
+          - InvoiceTableData는 Suspense 경계 내부에 배치하여 비동기 렌더링을 지원합니다.
           - Notion API 응답 대기 중에는 InvoiceTableSkeleton이 표시됩니다.
           - DashboardSearchFilter가 외부에 있으므로 검색 UI는 로딩 중에도 즉시 표시됩니다.
           ==================================================== */}
@@ -396,74 +387,10 @@ export default async function DashboardPage(_props: DashboardPageProps) {
         role="region"
         aria-label="견적서 목록"
       >
-        <Table aria-label="견적서 목록 테이블">
-          {/* 테이블 헤더 */}
-          <TableHeader>
-            <TableRow className="bg-muted/50 dark:bg-muted/20 hover:bg-muted/50 dark:hover:bg-muted/20">
-              {/* 제목 컬럼 */}
-              <TableHead
-                className="w-[200px] lg:w-[240px] pl-4"
-                scope="col"
-              >
-                제목
-              </TableHead>
-
-              {/* 클라이언트명 컬럼 */}
-              <TableHead
-                className="w-[160px]"
-                scope="col"
-              >
-                클라이언트
-              </TableHead>
-
-              {/* 총 금액 컬럼 - 우측 정렬 */}
-              <TableHead
-                className="text-right w-[140px]"
-                scope="col"
-              >
-                총 금액
-              </TableHead>
-
-              {/* 견적 일자 컬럼 - 태블릿 이상에서만 표시 */}
-              <TableHead
-                className="hidden md:table-cell w-[120px]"
-                scope="col"
-              >
-                견적 일자
-              </TableHead>
-
-              {/* 상태 컬럼 - 소형 화면 이상에서 표시 */}
-              <TableHead
-                className="hidden sm:table-cell w-[100px]"
-                scope="col"
-              >
-                상태
-              </TableHead>
-
-              {/* 조회 컬럼 (Post-MVP Phase 2) - 소형 화면 이상에서 표시 */}
-              <TableHead
-                className="hidden sm:table-cell w-[100px]"
-                scope="col"
-              >
-                조회
-              </TableHead>
-
-              {/* 액션 컬럼 */}
-              <TableHead
-                className="w-[80px] text-right pr-4"
-                scope="col"
-                aria-label="액션"
-              >
-                <span className="sr-only">액션</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-
-          {/* 테이블 바디: Suspense로 로딩 상태 처리 */}
-          <Suspense fallback={<InvoiceTableSkeleton rows={5} />}>
-            <InvoiceTableBody />
-          </Suspense>
-        </Table>
+        {/* 테이블: Suspense로 로딩 상태 처리 */}
+        <Suspense fallback={<InvoiceTableSkeleton rows={5} />}>
+          <InvoiceTableData />
+        </Suspense>
       </div>
 
       {/* ====================================================

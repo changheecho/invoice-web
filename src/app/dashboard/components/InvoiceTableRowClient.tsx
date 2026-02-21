@@ -17,6 +17,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
   TableCell,
   TableRow,
@@ -76,6 +77,10 @@ interface InvoiceTableRowClientProps {
   invoice: InvoiceSummary
   viewCount?: number
   lastViewedAt?: string
+  /** 선택 상태 (Post-MVP Phase 4) */
+  isSelected?: boolean
+  /** 선택 상태 변경 콜백 (Post-MVP Phase 4) */
+  onSelectionChange?: (invoiceId: string, selected: boolean) => void
 }
 
 /**
@@ -88,6 +93,8 @@ export const InvoiceTableRowClient = ({
   invoice,
   viewCount = 0,
   lastViewedAt,
+  isSelected = false,
+  onSelectionChange,
 }: InvoiceTableRowClientProps) => {
   // Copy 버튼 상태
   const [isCopying, setIsCopying] = useState(false)
@@ -156,7 +163,18 @@ export const InvoiceTableRowClient = ({
   }
 
   return (
-    <TableRow className="group">
+    <TableRow className={cn('group', isSelected && 'bg-muted/50')}>
+      {/* 체크박스 (Post-MVP Phase 4) */}
+      <TableCell className="w-12 px-2">
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={(checked) => {
+            onSelectionChange?.(invoice.id, checked as boolean)
+          }}
+          aria-label={`${invoice.title} 선택`}
+        />
+      </TableCell>
+
       {/* 제목 */}
       <TableCell>
         <Link
