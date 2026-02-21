@@ -10,7 +10,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { RotateCw, Copy, ChevronRight, FileText, Inbox } from 'lucide-react'
+import { RotateCw, FileText, Inbox } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,8 +27,10 @@ import { DashboardSearchFilter } from './components/DashboardSearchFilter'
 import { ROUTES } from '@/lib/constants'
 import { transformToInvoiceSummary } from '@/lib/notion/transform'
 import { NOTION_DATABASE_ID } from '@/lib/env'
+import { getShareLinkByNotionId } from '@/lib/supabase/share-links'
 import type { InvoiceSummary } from '@/types'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
+import { InvoiceTableRowClient } from './components/InvoiceTableRowClient'
 
 /**
  * 페이지 메타데이터
@@ -75,12 +77,22 @@ const formatDate = (dateString: string): string => {
 // ============================================================
 
 /**
- * 견적서 테이블 행 컴포넌트
+ * 견적서 테이블 행 컴포넌트 (Post-MVP Phase 2 수정)
  * 각 견적서의 정보를 테이블 행으로 표시합니다.
  *
  * @property invoice - 견적서 요약 데이터
+ * @property viewCount - 조회 횟수 (Post-MVP Phase 2)
+ * @property lastViewedAt - 최근 조회 일시 (Post-MVP Phase 2)
  */
-const InvoiceTableRow = ({ invoice }: { invoice: InvoiceSummary }) => (
+const InvoiceTableRow = ({
+  invoice,
+  viewCount = 0,
+  lastViewedAt,
+}: {
+  invoice: InvoiceSummary
+  viewCount?: number
+  lastViewedAt?: string
+}) => (
   <TableRow
     key={invoice.id}
     className="group"
@@ -119,6 +131,11 @@ const InvoiceTableRow = ({ invoice }: { invoice: InvoiceSummary }) => (
     {/* 상태 배지 - 소형 화면 이상에서 표시 */}
     <TableCell className="hidden sm:table-cell">
       <InvoiceStatusBadge status={invoice.status} />
+    </TableCell>
+
+    {/* 조회 상태 배지 (Post-MVP Phase 2) - 소형 화면 이상에서 표시 */}
+    <TableCell className="hidden sm:table-cell">
+      <InvoiceViewStatusBadge viewCount={viewCount} lastViewedAt={lastViewedAt} />
     </TableCell>
 
     {/* 액션 버튼 영역 */}
@@ -261,10 +278,36 @@ const InvoiceTableBody = async () => {
     return <EmptyState />
   }
 
+  // Post-MVP Phase 2: 각 invoice의 view_count 조회
+  const invoicesWithViewStats = await Promise.all(
+    invoices.map(async (invoice) => {
+      try {
+        const shareLink = await getShareLinkByNotionId(invoice.id)
+        return {
+          invoice,
+          viewCount: shareLink?.viewCount ?? 0,
+          lastViewedAt: shareLink?.lastViewedAt,
+        }
+      } catch (error) {
+        console.warn(`[대시보드] view_count 조회 실패 (invoiceId=${invoice.id}):`, error)
+        return {
+          invoice,
+          viewCount: 0,
+          lastViewedAt: undefined,
+        }
+      }
+    })
+  )
+
   return (
     <TableBody>
-      {invoices.map((invoice) => (
-        <InvoiceTableRow key={invoice.id} invoice={invoice} />
+      {invoicesWithViewStats.map(({ invoice, viewCount, lastViewedAt }) => (
+        <InvoiceTableRowClient
+          key={invoice.id}
+          invoice={invoice}
+          viewCount={viewCount}
+          lastViewedAt={lastViewedAt}
+        />
       ))}
     </TableBody>
   )
@@ -394,6 +437,14 @@ export default async function DashboardPage(_props: DashboardPageProps) {
                 scope="col"
               >
                 상태
+              </TableHead>
+
+              {/* 조회 컬럼 (Post-MVP Phase 2) - 소형 화면 이상에서 표시 */}
+              <TableHead
+                className="hidden sm:table-cell w-[100px]"
+                scope="col"
+              >
+                조회
               </TableHead>
 
               {/* 액션 컬럼 */}

@@ -1,8 +1,8 @@
 /**
- * 관리자 대시보드 헤더 컴포넌트
+ * 관리자 대시보드 헤더 컴포넌트 (Post-MVP Phase 3 수정)
  *
  * 관리자 영역(/dashboard/*)에서 표시되는 상단 네비게이션 바입니다.
- * 로고, 로그아웃 버튼을 포함합니다.
+ * 로고, 다크모드 토글, 로그아웃 버튼을 포함합니다.
  *
  * @note 이 컴포넌트는 src/app/dashboard/layout.tsx에서 사용됩니다.
  */
@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation'
 import { LogOut, FileText } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { createClient } from '@/lib/supabase/client'
 import { ROUTES } from '@/lib/constants'
 
@@ -52,16 +53,22 @@ export function DashboardHeader() {
           <span>Invoice Web</span>
         </Link>
 
-        {/* 로그아웃 버튼 */}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleSignOut}
-          className="text-muted-foreground hover:text-foreground"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          로그아웃
-        </Button>
+        {/* 우측 액션 영역 */}
+        <div className="flex items-center gap-2">
+          {/* Post-MVP Phase 3: 다크모드 토글 */}
+          <ThemeToggle />
+
+          {/* 로그아웃 버튼 */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleSignOut}
+            className="text-muted-foreground hover:text-foreground"
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            로그아웃
+          </Button>
+        </div>
       </div>
     </header>
   )

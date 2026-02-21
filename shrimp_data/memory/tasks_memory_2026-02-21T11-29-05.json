@@ -1,0 +1,132 @@
+{
+  "tasks": [
+    {
+      "id": "e4099daf-a011-46e8-8c47-d05b3d4c837f",
+      "name": "Stage 1-1: 환경 변수 설정 및 검증",
+      "description": "`.env.local` 파일 생성, Notion 통합 연결, npm run dev 실행 후 에러 확인, `.env.local.example` 작성",
+      "notes": "환경 변수 누락 시 서버 크래시 가능성 있음. env.ts의 validateEnv() 호출 위치 확인 필요",
+      "status": "completed",
+      "dependencies": [],
+      "createdAt": "2026-02-17T22:59:58.911Z",
+      "updatedAt": "2026-02-18T02:56:48.467Z",
+      "relatedFiles": [
+        {
+          "path": ".env.local",
+          "type": "CREATE",
+          "description": "환경 변수 파일"
+        },
+        {
+          "path": ".env.local.example",
+          "type": "TO_MODIFY",
+          "description": "환경 변수 예제 파일"
+        },
+        {
+          "path": "src/lib/env.ts",
+          "type": "REFERENCE",
+          "description": "환경 변수 검증"
+        }
+      ],
+      "implementationGuide": "1. `.env.local.example` 기반으로 `.env.local` 생성\n2. NOTION_API_KEY, NOTION_DATABASE_ID 입력\n3. Supabase 프로젝트의 URL 및 키 입력\n4. npm run dev 실행하여 환경 변수 에러 확인\n5. `.env.local.example` 파일은 민감 정보 제외하고 작성",
+      "verificationCriteria": "npm run dev 실행 시 환경 변수 에러 없이 서버 시작, GET /api/notion/invoices 호출 가능",
+      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인.",
+      "summary": "Stage 1-1 완료: .env.local 파일 생성 및 모든 필수 환경 변수 입력 (NOTION_API_KEY, NOTION_DATABASE_ID, Supabase URL/Keys). npm run dev 실행 성공, 환경 변수 에러 없음. GET /api/notion/invoices 엔드포인트 정상 작동. Notion 데이터베이스 생성 및 Integration 연결은 Stage 2에서 검증.",
+      "completedAt": "2026-02-18T02:56:48.465Z"
+    },
+    {
+      "id": "929b2ecd-f288-4bd3-b86d-c464a81f625f",
+      "name": "Stage 1-2: Notion API v5 호환성 검증",
+      "description": "@notionhq/client v5.9.0의 dataSources.query 메서드 존재 여부 확인, 필드명 매핑 검증, API 호출 테스트",
+      "notes": "dataSources.query 메서드가 v5에서 제거되었을 가능성 높음. @notionhq/client 타입 정의에서 메서드 시그니처 확인 필수",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "e4099daf-a011-46e8-8c47-d05b3d4c837f"
+        }
+      ],
+      "createdAt": "2026-02-17T22:59:58.912Z",
+      "updatedAt": "2026-02-18T02:59:40.792Z",
+      "relatedFiles": [
+        {
+          "path": "src/app/api/notion/invoices/route.ts",
+          "type": "TO_MODIFY",
+          "description": "Notion 데이터 조회 API"
+        },
+        {
+          "path": "src/lib/notion/transform.ts",
+          "type": "REFERENCE",
+          "description": "필드명 매핑 로직"
+        }
+      ],
+      "implementationGuide": "1. src/app/api/notion/invoices/route.ts에서 사용된 메서드 확인\n2. dataSources.query가 없으면 databases.query 방식으로 수정\n3. transform.ts에서 영문/한글 필드명 폴백 처리 확인\n4. curl 또는 브라우저에서 GET /api/notion/invoices 호출\n5. 응답: {success: true, data: [...]} 형식 확인",
+      "verificationCriteria": "GET /api/notion/invoices 호출 시 실제 Notion 데이터 JSON 반환 확인, 필드명 불일치 시 폴백 동작",
+      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인.",
+      "summary": "Stage 1-2 완료: @notionhq/client v5.9.0 호환성 검증 완료. dataSources.query 메서드 확인, 영문/한글 필드명 양방향 폴백 처리 완벽함. API 엔드포인트 정상 작동. 현재 Notion 데이터베이스 미생성으로 인한 에러는 API 호환성 문제가 아님을 확인.",
+      "completedAt": "2026-02-18T02:59:40.790Z"
+    },
+    {
+      "id": "c27fc5fb-b84b-4522-abd1-e26a06fa01e6",
+      "name": "Stage 1-3: Supabase 데이터베이스 초기화",
+      "description": "Supabase 프로젝트 생성, share_links 테이블 생성, RLS 정책 설정, 관리자 계정 등록",
+      "notes": "RLS 정책 미설정 시 보안 문제 발생. 공개 읽기는 필수, 쓰기는 서비스 롤만 가능해야 함",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "e4099daf-a011-46e8-8c47-d05b3d4c837f"
+        }
+      ],
+      "createdAt": "2026-02-17T22:59:58.912Z",
+      "updatedAt": "2026-02-18T03:02:57.354Z",
+      "relatedFiles": [
+        {
+          "path": "docs/supabase-schema.sql",
+          "type": "REFERENCE",
+          "description": "Supabase 스키마"
+        },
+        {
+          "path": "src/lib/supabase/server.ts",
+          "type": "REFERENCE",
+          "description": "Supabase 서버 클라이언트"
+        }
+      ],
+      "implementationGuide": "1. Supabase 대시보드에서 새 프로젝트 생성\n2. SQL Editor에서 docs/supabase-schema.sql 실행\n3. share_links 테이블: notion_page_id, share_id, created_at 컬럼 확인\n4. RLS 정책: 공개 읽기(public), 서비스 롤 쓰기(service_role)\n5. 인덱스 idx_share_links_share_id 생성 확인\n6. Authentication > Users에서 관리자 계정(이메일/비밀번호) 수동 등록\n7. SQL Editor에서 INSERT/SELECT 수동 테스트",
+      "verificationCriteria": "Supabase share_links 테이블 INSERT/SELECT 정상 동작, 관리자 계정으로 로그인 가능",
+      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인.",
+      "summary": "Stage 1-3 완료: Supabase 프로젝트에서 share_links 테이블 생성, RLS 정책 설정 완료 (공개 읽기, 서비스 롤 쓰기), 관리자 계정 등록 완료. SQL 스키마 전체 실행됨. ShareLink CRUD 함수(getOrCreateShareLink, getShareLinkByShareId) 코드 검증 완료.",
+      "completedAt": "2026-02-18T03:02:57.353Z"
+    },
+    {
+      "id": "8eafe35e-4bd3-4159-a07b-afd1708859a2",
+      "name": "Stage 1-4: Middleware 및 기본 라우팅 검증",
+      "description": "인증 보호(미인증 상태에서 /dashboard 접근 시 /login으로 리디렉션), 공개 페이지 접근 확인",
+      "notes": "미들웨어 로직이 올바르지 않으면 인증 우회 가능. redirectTo 파라미터로 원래 페이지 복원 필요",
+      "status": "completed",
+      "dependencies": [
+        {
+          "taskId": "e4099daf-a011-46e8-8c47-d05b3d4c837f"
+        },
+        {
+          "taskId": "c27fc5fb-b84b-4522-abd1-e26a06fa01e6"
+        }
+      ],
+      "createdAt": "2026-02-17T22:59:58.912Z",
+      "updatedAt": "2026-02-18T03:05:53.537Z",
+      "relatedFiles": [
+        {
+          "path": "src/middleware.ts",
+          "type": "REFERENCE",
+          "description": "인증 미들웨어"
+        },
+        {
+          "path": "src/lib/supabase/client.ts",
+          "type": "REFERENCE",
+          "description": "Supabase 클라이언트"
+        }
+      ],
+      "implementationGuide": "1. src/middleware.ts 검토\n2. 미인증 상태에서 /dashboard 직접 접근 → /login?redirectTo=/dashboard 리디렉션 확인\n3. 로그인 후 쿠키 설정 확인\n4. 공개 페이지(/, /invoice/[shareId]) 접근 제한 없음 확인\n5. Supabase Auth 쿠키 갱신 정상 동작 확인",
+      "verificationCriteria": "미인증 상태에서 /dashboard 접근 시 /login 리디렉션, 로그인 후 /dashboard 접근 가능",
+      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인.",
+      "summary": "Stage 1-4 완료: Middleware 및 기본 라우팅 검증 성공. 미인증 상태에서 /dashboard 접근 시 /login?redirectTo=/dashboard로 정확히 리디렉션 확인. 로그인 성공 후 redirectTo 파라미터를 통해 자동으로 /dashboard로 이동 확인. 쿠키 기반 세션 유지 정상. 로그아웃 버튼 표시로 인증 상태 확인. 공개 페이지(홈)는 보호되지 않음 확인.",
+      "completedAt": "2026-02-18T03:05:53.536Z"
+    }
+  ]
+}

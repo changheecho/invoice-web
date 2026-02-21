@@ -1,9 +1,11 @@
 /**
- * 클라이언트용 공개 견적서 페이지
+ * 클라이언트용 공개 견적서 페이지 (Post-MVP Phase 2 수정)
  *
  * 공유 링크(shareId)로 접근하는 비로그인 공개 페이지입니다.
  * shareId → notionPageId 매핑을 Supabase에서 조회한 후,
  * Notion API에서 견적서 데이터를 가져와 InvoiceViewer로 렌더링합니다.
+ *
+ * Post-MVP Phase 2: 페이지 렌더링 시 조회 기록 API 호출 추가
  *
  * @param params.shareId - 공개 공유 링크 ID (URL 파라미터)
  *
@@ -180,6 +182,12 @@ export default async function PublicInvoicePage(
   // 공개 페이지 URL (공유 버튼용 - 이 페이지에서는 사용 안 함)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
   const shareUrl = `${appUrl}/invoice/${shareId}`
+
+  // Post-MVP Phase 2: 비동기 조회 기록 저장 (페이지 렌더링에 영향 없음)
+  // await하지 않음 - 병렬 처리로 성능 향상
+  fetch(`${appUrl}/api/invoice/${shareId}/view`, { method: 'POST' }).catch((err) => {
+    console.warn('[PublicInvoicePage] 조회 기록 저장 실패:', err)
+  })
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">

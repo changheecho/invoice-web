@@ -1,533 +1,167 @@
 {
   "tasks": [
     {
-      "id": "e4099daf-a011-46e8-8c47-d05b3d4c837f",
-      "name": "Stage 1-1: 환경 변수 설정 및 검증",
-      "description": "`.env.local` 파일 생성, Notion 통합 연결, npm run dev 실행 후 에러 확인, `.env.local.example` 작성",
-      "notes": "환경 변수 누락 시 서버 크래시 가능성 있음. env.ts의 validateEnv() 호출 위치 확인 필요",
-      "status": "completed",
+      "id": "d1593e1a-a176-4f39-9ca7-6a1a9ad77adf",
+      "name": "Task A-1: API routes에 ISR 캐싱 옵션 추가",
+      "description": "src/app/api/notion/invoices/route.ts와 src/app/api/notion/invoice/[id]/route.ts에 next: { revalidate: 60 } 옵션 추가로 60초 캐싱 구현. Vercel에서 X-Vercel-Cache: HIT 헤더 확인 가능.\\n\\n수정 파일:\\n- src/app/api/notion/invoices/route.ts (라인 67 근처 fetch 호출)\\n- src/app/api/notion/invoice/[id]/route.ts (동일 패턴)\\n\\n구현 방식:\\n```\\nconst response = await fetch(url, {\\n  method: 'POST',\\n  headers: {...},\\n  body: JSON.stringify({...}),\\n  next: { revalidate: 60 }\\n})\\n```\\n\\n검증:\\n- curl로 동일 요청 2회 실행\\n- 서버 로그에서 Notion API 호출 1회만 확인\\n- 같은 URL 재방문 시 캐시 히트 확인",
+      "notes": "- revalidate: 60은 60초마다 백그라운드에서 재검증\\n- 관리자용 API는 60초, 공개 페이지는 300초 고려\\n- cache: 'no-store'가 있으면 제거할 것",
+      "status": "pending",
       "dependencies": [],
-      "createdAt": "2026-02-17T22:59:58.911Z",
-      "updatedAt": "2026-02-18T02:56:48.467Z",
-      "relatedFiles": [
-        {
-          "path": ".env.local",
-          "type": "CREATE",
-          "description": "환경 변수 파일"
-        },
-        {
-          "path": ".env.local.example",
-          "type": "TO_MODIFY",
-          "description": "환경 변수 예제 파일"
-        },
-        {
-          "path": "src/lib/env.ts",
-          "type": "REFERENCE",
-          "description": "환경 변수 검증"
-        }
-      ],
-      "implementationGuide": "1. `.env.local.example` 기반으로 `.env.local` 생성\n2. NOTION_API_KEY, NOTION_DATABASE_ID 입력\n3. Supabase 프로젝트의 URL 및 키 입력\n4. npm run dev 실행하여 환경 변수 에러 확인\n5. `.env.local.example` 파일은 민감 정보 제외하고 작성",
-      "verificationCriteria": "npm run dev 실행 시 환경 변수 에러 없이 서버 시작, GET /api/notion/invoices 호출 가능",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인.",
-      "summary": "Stage 1-1 완료: .env.local 파일 생성 및 모든 필수 환경 변수 입력 (NOTION_API_KEY, NOTION_DATABASE_ID, Supabase URL/Keys). npm run dev 실행 성공, 환경 변수 에러 없음. GET /api/notion/invoices 엔드포인트 정상 작동. Notion 데이터베이스 생성 및 Integration 연결은 Stage 2에서 검증.",
-      "completedAt": "2026-02-18T02:56:48.465Z"
-    },
-    {
-      "id": "929b2ecd-f288-4bd3-b86d-c464a81f625f",
-      "name": "Stage 1-2: Notion API v5 호환성 검증",
-      "description": "@notionhq/client v5.9.0의 dataSources.query 메서드 존재 여부 확인, 필드명 매핑 검증, API 호출 테스트",
-      "notes": "dataSources.query 메서드가 v5에서 제거되었을 가능성 높음. @notionhq/client 타입 정의에서 메서드 시그니처 확인 필수",
-      "status": "completed",
-      "dependencies": [
-        {
-          "taskId": "e4099daf-a011-46e8-8c47-d05b3d4c837f"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-18T02:59:40.792Z",
+      "createdAt": "2026-02-21T02:29:05.218Z",
+      "updatedAt": "2026-02-21T02:29:05.218Z",
       "relatedFiles": [
         {
           "path": "src/app/api/notion/invoices/route.ts",
           "type": "TO_MODIFY",
-          "description": "Notion 데이터 조회 API"
+          "description": "fetch() 호출에 next: { revalidate: 60 } 추가",
+          "lineStart": 67,
+          "lineEnd": 85
         },
         {
-          "path": "src/lib/notion/transform.ts",
-          "type": "REFERENCE",
-          "description": "필드명 매핑 로직"
-        }
-      ],
-      "implementationGuide": "1. src/app/api/notion/invoices/route.ts에서 사용된 메서드 확인\n2. dataSources.query가 없으면 databases.query 방식으로 수정\n3. transform.ts에서 영문/한글 필드명 폴백 처리 확인\n4. curl 또는 브라우저에서 GET /api/notion/invoices 호출\n5. 응답: {success: true, data: [...]} 형식 확인",
-      "verificationCriteria": "GET /api/notion/invoices 호출 시 실제 Notion 데이터 JSON 반환 확인, 필드명 불일치 시 폴백 동작",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인.",
-      "summary": "Stage 1-2 완료: @notionhq/client v5.9.0 호환성 검증 완료. dataSources.query 메서드 확인, 영문/한글 필드명 양방향 폴백 처리 완벽함. API 엔드포인트 정상 작동. 현재 Notion 데이터베이스 미생성으로 인한 에러는 API 호환성 문제가 아님을 확인.",
-      "completedAt": "2026-02-18T02:59:40.790Z"
-    },
-    {
-      "id": "c27fc5fb-b84b-4522-abd1-e26a06fa01e6",
-      "name": "Stage 1-3: Supabase 데이터베이스 초기화",
-      "description": "Supabase 프로젝트 생성, share_links 테이블 생성, RLS 정책 설정, 관리자 계정 등록",
-      "notes": "RLS 정책 미설정 시 보안 문제 발생. 공개 읽기는 필수, 쓰기는 서비스 롤만 가능해야 함",
-      "status": "completed",
-      "dependencies": [
-        {
-          "taskId": "e4099daf-a011-46e8-8c47-d05b3d4c837f"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-18T03:02:57.354Z",
-      "relatedFiles": [
-        {
-          "path": "docs/supabase-schema.sql",
-          "type": "REFERENCE",
-          "description": "Supabase 스키마"
-        },
-        {
-          "path": "src/lib/supabase/server.ts",
-          "type": "REFERENCE",
-          "description": "Supabase 서버 클라이언트"
-        }
-      ],
-      "implementationGuide": "1. Supabase 대시보드에서 새 프로젝트 생성\n2. SQL Editor에서 docs/supabase-schema.sql 실행\n3. share_links 테이블: notion_page_id, share_id, created_at 컬럼 확인\n4. RLS 정책: 공개 읽기(public), 서비스 롤 쓰기(service_role)\n5. 인덱스 idx_share_links_share_id 생성 확인\n6. Authentication > Users에서 관리자 계정(이메일/비밀번호) 수동 등록\n7. SQL Editor에서 INSERT/SELECT 수동 테스트",
-      "verificationCriteria": "Supabase share_links 테이블 INSERT/SELECT 정상 동작, 관리자 계정으로 로그인 가능",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인.",
-      "summary": "Stage 1-3 완료: Supabase 프로젝트에서 share_links 테이블 생성, RLS 정책 설정 완료 (공개 읽기, 서비스 롤 쓰기), 관리자 계정 등록 완료. SQL 스키마 전체 실행됨. ShareLink CRUD 함수(getOrCreateShareLink, getShareLinkByShareId) 코드 검증 완료.",
-      "completedAt": "2026-02-18T03:02:57.353Z"
-    },
-    {
-      "id": "8eafe35e-4bd3-4159-a07b-afd1708859a2",
-      "name": "Stage 1-4: Middleware 및 기본 라우팅 검증",
-      "description": "인증 보호(미인증 상태에서 /dashboard 접근 시 /login으로 리디렉션), 공개 페이지 접근 확인",
-      "notes": "미들웨어 로직이 올바르지 않으면 인증 우회 가능. redirectTo 파라미터로 원래 페이지 복원 필요",
-      "status": "completed",
-      "dependencies": [
-        {
-          "taskId": "e4099daf-a011-46e8-8c47-d05b3d4c837f"
-        },
-        {
-          "taskId": "c27fc5fb-b84b-4522-abd1-e26a06fa01e6"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-18T03:05:53.537Z",
-      "relatedFiles": [
-        {
-          "path": "src/middleware.ts",
-          "type": "REFERENCE",
-          "description": "인증 미들웨어"
-        },
-        {
-          "path": "src/lib/supabase/client.ts",
-          "type": "REFERENCE",
-          "description": "Supabase 클라이언트"
-        }
-      ],
-      "implementationGuide": "1. src/middleware.ts 검토\n2. 미인증 상태에서 /dashboard 직접 접근 → /login?redirectTo=/dashboard 리디렉션 확인\n3. 로그인 후 쿠키 설정 확인\n4. 공개 페이지(/, /invoice/[shareId]) 접근 제한 없음 확인\n5. Supabase Auth 쿠키 갱신 정상 동작 확인",
-      "verificationCriteria": "미인증 상태에서 /dashboard 접근 시 /login 리디렉션, 로그인 후 /dashboard 접근 가능",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인.",
-      "summary": "Stage 1-4 완료: Middleware 및 기본 라우팅 검증 성공. 미인증 상태에서 /dashboard 접근 시 /login?redirectTo=/dashboard로 정확히 리디렉션 확인. 로그인 성공 후 redirectTo 파라미터를 통해 자동으로 /dashboard로 이동 확인. 쿠키 기반 세션 유지 정상. 로그아웃 버튼 표시로 인증 상태 확인. 공개 페이지(홈)는 보호되지 않음 확인.",
-      "completedAt": "2026-02-18T03:05:53.536Z"
-    },
-    {
-      "id": "cabd459b-f289-4967-ba5f-c81587dfc8fa",
-      "name": "Stage 2-1: Notion 데이터 조회 함수 검증",
-      "description": "getInvoices(), getInvoiceById(id) 함수 동작 검증, Items 필드 JSON 파싱, 응답 타입 확인",
-      "notes": "Items 필드가 JSON 문자열 형태일 수 있음. try-catch 폴백으로 빈 배열 처리 필요",
-      "status": "in_progress",
-      "dependencies": [
-        {
-          "taskId": "929b2ecd-f288-4bd3-b86d-c464a81f625f"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-18T07:49:22.473Z",
-      "relatedFiles": [
-        {
-          "path": "src/lib/notion/client.ts",
-          "type": "REFERENCE",
-          "description": "Notion 데이터 조회"
-        },
-        {
-          "path": "src/types/index.ts",
-          "type": "REFERENCE",
-          "description": "타입 정의"
-        }
-      ],
-      "implementationGuide": "1. src/lib/notion/client.ts의 getInvoices() 함수 호출\n2. 응답: InvoiceSummary[] 타입 확인\n3. getInvoiceById(id) 함수로 개별 견적서 조회\n4. Items 필드 JSON 파싱 정상 동작 확인\n5. 응답: Invoice 타입 확인\n6. 응답 시간 2초 이내 목표 확인",
-      "verificationCriteria": "getInvoices() 호출 시 실제 Notion 견적서 목록 반환, getInvoiceById(id) 호출 시 상세 데이터 반환",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
-    },
-    {
-      "id": "6a963a4a-f84e-4a71-bec4-3e4ad5df174a",
-      "name": "Stage 2-2: ShareLink CRUD 동작 검증",
-      "description": "getOrCreateShareLink() 함수로 새로운 shareId 생성, 재호출 시 기존 ID 반환 확인, getShareLinkByShareId() 조회 테스트",
-      "notes": "nanoid 중복 생성 방지, UPSERT 로직으로 원자성 보장 필요",
-      "status": "in_progress",
-      "dependencies": [
-        {
-          "taskId": "c27fc5fb-b84b-4522-abd1-e26a06fa01e6"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-18T07:50:28.401Z",
-      "relatedFiles": [
-        {
-          "path": "src/lib/supabase/share-links.ts",
-          "type": "REFERENCE",
-          "description": "공유 링크 CRUD"
-        }
-      ],
-      "implementationGuide": "1. src/lib/supabase/share-links.ts의 getOrCreateShareLink(notionPageId) 호출\n2. 신규 생성 시 nanoid 12자리 shareId 생성 확인\n3. 동일 notionPageId로 재호출 → 기존 레코드 반환 확인 (중복 생성 방지)\n4. getShareLinkByShareId(shareId) 호출\n5. 유효한 shareId → ShareLink 반환, 잘못된 shareId → null 반환 확인",
-      "verificationCriteria": "getOrCreateShareLink() 호출 시 새로운 shareId 생성, 재호출 시 기존 ID 반환 확인",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
-    },
-    {
-      "id": "f5e63acb-841f-4c32-b05c-2abdadf38e58",
-      "name": "Stage 2-3: 로그인/인증 기능 검증",
-      "description": "Supabase Auth 구성 확인, 로그인 페이지 테스트, 세션 관리 검증",
-      "notes": "Supabase Auth 쿠키 갱신 이슈 가능. @supabase/ssr 공식 패턴 준수 필요",
-      "status": "in_progress",
-      "dependencies": [
-        {
-          "taskId": "c27fc5fb-b84b-4522-abd1-e26a06fa01e6"
-        },
-        {
-          "taskId": "8eafe35e-4bd3-4159-a07b-afd1708859a2"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-18T07:50:49.161Z",
-      "relatedFiles": [
-        {
-          "path": "src/app/login/page.tsx",
-          "type": "REFERENCE",
-          "description": "로그인 페이지"
-        },
-        {
-          "path": "src/middleware.ts",
-          "type": "REFERENCE",
-          "description": "인증 미들웨어"
-        }
-      ],
-      "implementationGuide": "1. Supabase 대시보드에서 이메일/비밀번호 인증 활성화 확인\n2. 관리자 계정이 Authentication > Users에 등록되어 있는지 확인\n3. src/app/login/page.tsx에서 실제 Supabase 계정으로 로그인 테스트\n4. 올바른 자격증명 → /dashboard 리디렉션 확인\n5. 잘못된 자격증명 → 한국어 에러 메시지 표시 확인\n6. 로그인 후 쿠키 설정 확인\n7. 미인증 상태에서 /dashboard 접근 시 /login 리디렉션\n8. 로그인 후 /login 직접 접근 시 /dashboard 리디렉션",
-      "verificationCriteria": "실제 Supabase 계정으로 로그인 후 /dashboard 접근 가능, 미인증 상태에서 /dashboard 접근 시 /login으로 리디렉션",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
-    },
-    {
-      "id": "a315dc3d-3b6b-467b-9a73-d011d20c4f7d",
-      "name": "Stage 3-1: 관리자 대시보드 UI 구현",
-      "description": "대시보드 목록 페이지 구현, 검색/필터링, Toast 알림 시스템, 로그아웃 기능",
-      "notes": "대시보드 초기 로딩 지연 가능. Suspense + Skeleton으로 로딩 상태 표시 필수",
-      "status": "pending",
-      "dependencies": [
-        {
-          "taskId": "cabd459b-f289-4967-ba5f-c81587dfc8fa"
-        },
-        {
-          "taskId": "f5e63acb-841f-4c32-b05c-2abdadf38e58"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
-      "relatedFiles": [
-        {
-          "path": "src/app/dashboard/page.tsx",
+          "path": "src/app/api/notion/invoice/[id]/route.ts",
           "type": "TO_MODIFY",
-          "description": "대시보드 페이지 (TODO 상태)"
+          "description": "fetch() 호출에 next: { revalidate: 60 } 추가"
         },
         {
-          "path": "src/components/common/",
-          "type": "CREATE",
-          "description": "대시보드 관련 공통 컴포넌트"
+          "path": "src/app/dashboard/page.ts",
+          "type": "REFERENCE",
+          "description": "API를 호출하는 consumer 페이지"
         }
       ],
-      "implementationGuide": "1. src/app/dashboard/page.tsx 구현\n2. Notion API 직접 호출하여 데이터 표시\n3. 테이블 컬럼: 제목, 클라이언트명, 총 금액, 견적 일자, 상태, 액션\n4. Suspense + 스켈레톤 로딩 상태 처리\n5. 검색 컴포넌트: 클라이언트명 또는 제목으로 필터링\n6. URL SearchParams 기반 상태 관리\n7. shadcn/ui Sonner 컴포넌트로 Toast 알림 시스템 통합\n8. 헤더의 로그아웃 버튼 활성화",
-      "verificationCriteria": "관리자 로그인 후 대시보드에서 Notion 견적서 목록 확인, 검색/필터링 동작, Toast 알림 표시",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
+      "implementationGuide": "1. 각 API route의 fetch() 호출을 찾기\\n2. fetch 호출의 두 번째 인자(options object)에 next: { revalidate: 60 } 추가\\n3. 기존 headers, body, method 등은 유지\\n4. 변경 후 npm run dev로 확인\\n5. curl을 사용해 동일 요청 2회 실행:\\n   curl http://localhost:3000/api/notion/invoices\\n6. 콘솔 로그에서 '[API] Notion 데이터베이스 조회' 메시지 1회만 출력되는지 확인",
+      "verificationCriteria": "1. 변경된 API routes의 fetch() 호출에 next: { revalidate: 60 } 옵션 확인\\n2. npm run dev 후 curl로 동일 URL 2회 요청\\n3. 서버 로그에서 'Notion 데이터베이스 조회' 메시지 1회만 출력\\n4. 60초 이내 재요청 시 캐시 응답 확인\\n5. 기존 기능(데이터 조회, 인증) 정상 작동 검증",
+      "analysisResult": "Phase 1: 견적서 상세 조회 성능 최적화 (ROADMAP.md 기준)\\\\n\\\\n목표: Lighthouse Performance 74→90+, Notion API 호출 60% 감소, 체감 로딩시간 1초 이내\\\\n\\\\n현황: API 캐싱 부재, 스켈레톤 UI 부분적 구현, Suspense 구조 미흡\\\\n\\\\n전략:\\\\n- ISR 캐싱으로 Notion API 호출 감소\\\\n- 스켈레톤 세분화로 로딩 체감 개선\\\\n- Suspense 경계 최적화\\\\n\\\\n기간: 3일 (2026-02-24 ~ 2026-02-26)"
     },
     {
-      "id": "3ccdf87d-3378-43be-a208-b553e383d3d9",
-      "name": "Stage 3-2: 견적서 웹 뷰어 컴포넌트 구현",
-      "description": "InvoiceViewer, InvoiceStatusBadge, InvoiceActions 컴포넌트 구현, 404/에러 페이지",
-      "notes": "모바일 테이블 레이아웃 깨짐 가능. overflow-x-auto + 모바일 카드 뷰 전환 필요",
+      "id": "f81c4626-2e18-47e9-b53d-5da44adfe8e5",
+      "name": "Task A-2: 공개 견적서 페이지 fetch 캐싱",
+      "description": "src/app/invoice/[shareId]/page.tsx의 generateMetadata 함수 내 fetch() 호출에 next: { revalidate: 300 } 추가. 공개 페이지는 수정 빈도가 낮으므로 300초로 설정.\\n\\n수정 파일:\\n- src/app/invoice/[shareId]/page.tsx (라인 38 근처 generateMetadata 내 fetch)\\n\\n구현:\\n```\\nconst response = await fetch(url, {\\n  headers: {...},\\n  next: { revalidate: 300 }\\n})\\n```",
+      "notes": "- 공개 페이지는 관리자가 공유한 후 자주 수정되지 않음\\n- 300초(5분)는 적절한 균형\\n- 추후 필요시 환경 변수로 조정 가능",
       "status": "pending",
       "dependencies": [
         {
-          "taskId": "cabd459b-f289-4967-ba5f-c81587dfc8fa"
+          "taskId": "d1593e1a-a176-4f39-9ca7-6a1a9ad77adf"
         }
       ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
+      "createdAt": "2026-02-21T02:29:05.218Z",
+      "updatedAt": "2026-02-21T02:29:05.218Z",
       "relatedFiles": [
-        {
-          "path": "src/components/invoice/InvoiceViewer.tsx",
-          "type": "CREATE",
-          "description": "견적서 웹 뷰어 컴포넌트"
-        },
-        {
-          "path": "src/components/invoice/InvoiceStatusBadge.tsx",
-          "type": "CREATE",
-          "description": "상태 배지 컴포넌트"
-        },
-        {
-          "path": "src/components/invoice/InvoiceActions.tsx",
-          "type": "CREATE",
-          "description": "액션 버튼 컴포넌트"
-        },
-        {
-          "path": "src/app/not-found.tsx",
-          "type": "CREATE",
-          "description": "전역 404 페이지"
-        }
-      ],
-      "implementationGuide": "1. src/components/invoice/InvoiceViewer.tsx 서버 컴포넌트 구현\n2. 전문적인 인보이스 레이아웃: 회사 정보, 클라이언트 정보, 항목 테이블, 총액\n3. 응답형: 모바일/태블릿/데스크톱 지원\n4. 다크 모드 지원\n5. InvoiceStatusBadge.tsx: 상태 배지 컴포넌트\n6. InvoiceActions.tsx: PDF 다운로드, 공유 링크 복사 버튼 (아직 연결 안 함)\n7. src/app/not-found.tsx, src/app/invoice/not-found.tsx 구현",
-      "verificationCriteria": "모바일(390px) / 태블릿(768px) / 데스크톱(1280px) 레이아웃 정상, 다크 모드에서 가독성 유지",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
-    },
-    {
-      "id": "05c1c557-0215-4387-985e-c6a0161ca2b1",
-      "name": "Stage 3-3: 공유 링크 생성 및 복사 기능",
-      "description": "/api/share-links POST 엔드포인트 구현, 대시보드/상세 페이지에서 복사 버튼 활성화",
-      "notes": "클립보드 API는 HTTPS 환경에서만 작동. 로컬 테스트는 localhost 허용",
-      "status": "pending",
-      "dependencies": [
-        {
-          "taskId": "6a963a4a-f84e-4a71-bec4-3e4ad5df174a"
-        },
-        {
-          "taskId": "a315dc3d-3b6b-467b-9a73-d011d20c4f7d"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
-      "relatedFiles": [
-        {
-          "path": "src/app/api/share-links/route.ts",
-          "type": "CREATE",
-          "description": "공유 링크 생성 API"
-        },
-        {
-          "path": "src/components/invoice/InvoiceActions.tsx",
-          "type": "TO_MODIFY",
-          "description": "공유 링크 복사 로직"
-        }
-      ],
-      "implementationGuide": "1. src/app/api/share-links/route.ts POST 엔드포인트 구현\n2. 서버사이드 인증 검증 (미인증 상태 차단)\n3. getOrCreateShareLink(notionPageId) 호출\n4. 클라이언트 컴포넌트에서 API 호출\n5. 클립보드 API로 URL 복사\n6. Toast 알림으로 복사 완료/실패 표시",
-      "verificationCriteria": "공유 링크 복사 버튼 클릭 시 클립보드에 URL 복사, Toast 알림 표시",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
-    },
-    {
-      "id": "7f147ba7-8e6b-4758-bbfe-79ce591d9954",
-      "name": "Stage 3-4: 페이지 리팩토링 및 홈 페이지 업데이트",
-      "description": "관리자 상세 페이지, 공개 견적서 페이지 리팩토링, 홈 페이지 로그인 버튼 추가",
-      "notes": "관리자 상세 페이지와 공개 페이지는 액션 버튼이 다름. 조건부 렌더링으로 처리",
-      "status": "pending",
-      "dependencies": [
-        {
-          "taskId": "3ccdf87d-3378-43be-a208-b553e383d3d9"
-        },
-        {
-          "taskId": "05c1c557-0215-4387-985e-c6a0161ca2b1"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
-      "relatedFiles": [
-        {
-          "path": "src/app/dashboard/invoice/[id]/page.tsx",
-          "type": "TO_MODIFY",
-          "description": "관리자 상세 페이지"
-        },
         {
           "path": "src/app/invoice/[shareId]/page.tsx",
           "type": "TO_MODIFY",
-          "description": "공개 견적서 페이지"
-        },
-        {
-          "path": "src/app/page.tsx",
-          "type": "TO_MODIFY",
-          "description": "홈 페이지"
+          "description": "generateMetadata 내 fetch에 next: { revalidate: 300 } 추가",
+          "lineStart": 38,
+          "lineEnd": 44
         }
       ],
-      "implementationGuide": "1. src/app/dashboard/invoice/[id]/page.tsx 완성\n2. InvoiceViewer 컴포넌트 사용\n3. InvoiceActions 컴포넌트 (공유 링크 복사만 활성화)\n4. src/app/invoice/[shareId]/page.tsx 리팩토링\n5. InvoiceViewer 컴포넌트로 교체\n6. InvoiceActions 컴포넌트 (PDF 버튼만 활성화)\n7. src/app/page.tsx 홈 페이지에 \"관리자 로그인\" CTA 버튼 추가",
-      "verificationCriteria": "/invoice/[shareId]에서 공개 견적서 열람 가능, 유효하지 않은 shareId 접근 시 404 페이지 표시",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
+      "implementationGuide": "1. generateMetadata 함수에서 fetch() 호출 찾기 (라인 38)\\n2. fetch의 options object에 next: { revalidate: 300 } 추가\\n3. 300초 = 5분으로, 공개 견적서는 자주 변경되지 않으므로 적절",
+      "verificationCriteria": "1. generateMetadata 내 fetch() 호출에 next: { revalidate: 300 } 확인\\n2. 공개 페이지 접속 후 메타데이터 생성 확인\\n3. 동일 shareId로 300초 내 재방문 시 캐시 히트 확인\\n4. 페이지 타이틀, 설명 정상 표시",
+      "analysisResult": "Phase 1: 견적서 상세 조회 성능 최적화 (ROADMAP.md 기준)\\\\n\\\\n목표: Lighthouse Performance 74→90+, Notion API 호출 60% 감소, 체감 로딩시간 1초 이내\\\\n\\\\n현황: API 캐싱 부재, 스켈레톤 UI 부분적 구현, Suspense 구조 미흡\\\\n\\\\n전략:\\\\n- ISR 캐싱으로 Notion API 호출 감소\\\\n- 스켈레톤 세분화로 로딩 체감 개선\\\\n- Suspense 경계 최적화\\\\n\\\\n기간: 3일 (2026-02-24 ~ 2026-02-26)"
     },
     {
-      "id": "17b0be02-5d68-4209-a037-1650462980d5",
-      "name": "Stage 4-1: 한글 폰트 TTF 파일 준비",
-      "description": "Noto Sans KR TTF 파일 다운로드, 프로젝트에 배치, PDF 컴포넌트 폰트 소스 수정",
-      "notes": "woff2는 PDF에서 미지원. TTF 파일은 반드시 public 디렉토리에 배치. 빌드 전 파일 존재 검증 필수",
-      "status": "pending",
-      "dependencies": [],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
-      "relatedFiles": [
-        {
-          "path": "public/fonts/NotoSansKR-Regular.ttf",
-          "type": "CREATE",
-          "description": "한글 폰트 Regular"
-        },
-        {
-          "path": "public/fonts/NotoSansKR-Bold.ttf",
-          "type": "CREATE",
-          "description": "한글 폰트 Bold"
-        },
-        {
-          "path": "src/components/invoice/invoice-pdf-document.tsx",
-          "type": "TO_MODIFY",
-          "description": "PDF 문서 컴포넌트"
-        }
-      ],
-      "implementationGuide": "1. Google Fonts에서 Noto Sans KR Regular(400), Bold(700) 다운로드\n2. public/fonts/NotoSansKR-Regular.ttf, NotoSansKR-Bold.ttf에 배치\n3. src/components/invoice/invoice-pdf-document.tsx에서 폰트 소스 수정\n4. 현재 woff2 CDN URL을 TTF 파일 경로로 교체\n5. src: `${process.env.NEXT_PUBLIC_APP_URL}/fonts/NotoSansKR-Regular.ttf` 형식으로 변경",
-      "verificationCriteria": "public/fonts/NotoSansKR-*.ttf 파일 존재, 파일 크기 각각 5MB 이상, npm run build에서 파일 포함 확인",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
-    },
-    {
-      "id": "40c0641a-35c0-4c78-ad35-c95769ee60e2",
-      "name": "Stage 4-2: PDF 문서 컴포넌트 완성",
-      "description": "invoice-pdf-document.tsx 레이아웃 완성, TTF 폰트 등록 후 한글 렌더링 테스트",
-      "notes": "PDF에서 한글 폰트 깨짐 가능. TTF 파일 로드 및 렌더링 검증 필수",
+      "id": "a524e68d-1ed6-4a99-9589-62a4754a2253",
+      "name": "Task B-1: 스켈레톤 컴포넌트 신규 생성 (헤더/항목/합계)",
+      "description": "현재 InvoiceViewerSkeleton은 공개 페이지에 inline으로 정의되어 있음. 이를 재사용 가능한 컴포넌트들로 분해:\\n\\n신규 파일 3개 생성:\\n1. InvoiceHeaderSkeleton.tsx - 회사명+제목 영역\\n2. InvoiceItemsSkeleton.tsx - 항목 테이블 영역\\n3. InvoiceSummarySkeleton.tsx - 합계 영역\\n\\n각 컴포넌트는 InvoiceViewer 구조에 맞춘 skeleton 구성. 기존 Skeleton 컴포넌트(ui/skeleton)와 shadcn/ui 활용.\\n\\nInvoiceViewerSkeleton.tsx는 기존 코드를 src/components/invoice/로 추출하여 유지.",
+      "notes": "- 기존 InvoiceSkeleton.tsx (대시보드용 InvoiceTableSkeleton)는 유지\\n- 신규 스켈레톤들은 src/components/invoice/ 폴더에 집중\\n- 각 스켈레톤의 height/width는 실제 컨텐츠와 유사하게\\n- dark: prefix 클래스 필수 포함 (프로젝트 다크모드 지원)",
       "status": "pending",
       "dependencies": [
         {
-          "taskId": "17b0be02-5d68-4209-a037-1650462980d5"
+          "taskId": "d1593e1a-a176-4f39-9ca7-6a1a9ad77adf"
+        },
+        {
+          "taskId": "f81c4626-2e18-47e9-b53d-5da44adfe8e5"
         }
       ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
+      "createdAt": "2026-02-21T02:29:05.218Z",
+      "updatedAt": "2026-02-21T02:29:05.218Z",
       "relatedFiles": [
         {
-          "path": "src/components/invoice/invoice-pdf-document.tsx",
+          "path": "src/components/invoice/InvoiceHeaderSkeleton.tsx",
+          "type": "CREATE",
+          "description": "헤더 영역 스켈레톤 컴포넌트"
+        },
+        {
+          "path": "src/components/invoice/InvoiceItemsSkeleton.tsx",
+          "type": "CREATE",
+          "description": "항목 테이블 스켈레톤 컴포넌트"
+        },
+        {
+          "path": "src/components/invoice/InvoiceSummarySkeleton.tsx",
+          "type": "CREATE",
+          "description": "합계 영역 스켈레톤 컴포넌트"
+        },
+        {
+          "path": "src/components/invoice/InvoiceSkeleton.tsx",
           "type": "TO_MODIFY",
-          "description": "PDF 문서 컴포넌트"
+          "description": "신규 스켈레톤들 export 추가"
         }
       ],
-      "implementationGuide": "1. src/components/invoice/invoice-pdf-document.tsx 검토\n2. TTF 폰트 등록 후 한글 렌더링 테스트\n3. A4 페이지 크기, 상하좌우 40pt 여백 설정\n4. 항목 수가 많은 경우 페이지 자동 넘김 처리\n5. 회사 정보, 클라이언트 정보, 항목 테이블, 총액 등 레이아웃 완성\n6. 웹 뷰어와 동일한 디자인 유지",
-      "verificationCriteria": "PDF 한글 항목명, 클라이언트명 정상 표시 (깨짐 없음), 페이지 레이아웃 정상",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
+      "implementationGuide": "1. src/components/invoice/InvoiceHeaderSkeleton.tsx 생성\\n   - 회사 로고 placeholder, 제목 영역\\n   - 실제 layout과 동일하게 grid/flex 구성\\n   - dark: prefix 포함\\n\\n2. src/components/invoice/InvoiceItemsSkeleton.tsx 생성\\n   - 테이블 헤더 skeleton\\n   - 테이블 행 5개 skeleton\\n   - 테이블 푸터 skeleton\\n\\n3. src/components/invoice/InvoiceSummarySkeleton.tsx 생성\\n   - 소계, 구분선, 총액 영역\\n\\n4. 각 컴포넌트는 export const로 정의\\n5. Skeleton import는 ui/skeleton에서\\n6. className은 기존 InvoiceViewer와 일치하도록",
+      "verificationCriteria": "1. 3개 신규 스켈레톤 파일이 src/components/invoice/에 생성됨\\n2. 각 파일은 export const로 명명된 컴포넌트 정의\\n3. className에 dark: prefix 포함\\n4. InvoiceSkeleton.tsx에서 import 가능\\n5. TypeScript strict mode 준수",
+      "analysisResult": "Phase 1: 견적서 상세 조회 성능 최적화 (ROADMAP.md 기준)\\\\n\\\\n목표: Lighthouse Performance 74→90+, Notion API 호출 60% 감소, 체감 로딩시간 1초 이내\\\\n\\\\n현황: API 캐싱 부재, 스켈레톤 UI 부분적 구현, Suspense 구조 미흡\\\\n\\\\n전략:\\\\n- ISR 캐싱으로 Notion API 호출 감소\\\\n- 스켈레톤 세분화로 로딩 체감 개선\\\\n- Suspense 경계 최적화\\\\n\\\\n기간: 3일 (2026-02-24 ~ 2026-02-26)"
     },
     {
-      "id": "069e5eec-ddc5-4817-b37c-24fecc375f25",
-      "name": "Stage 4-3: PDF 생성 API 검증 및 완성",
-      "description": "src/app/api/invoice/[shareId]/pdf/route.ts 검증, PDF 파일명 설정, 생성 시간 측정",
-      "notes": "Vercel Serverless Function 타임아웃은 10초. PDF 생성은 3초 이내 목표. renderToBuffer() 사용으로 성능 최적화",
+      "id": "25fc5601-4cad-4d01-ac50-6b8e3f0e9d09",
+      "name": "Task B-2: 공개 페이지의 InvoiceViewerSkeleton 분리 및 Suspense 최적화",
+      "description": "현재 src/app/invoice/[shareId]/page.tsx에 inline으로 정의된 InvoiceViewerSkeleton을 제거하고, Task B-1에서 생성한 스켈레톤들을 import하여 사용.\\n\\n변경:\\n1. 기존 InvoiceViewerSkeleton 함수 제거\\n2. 신규 스켈레톤들 import\\n3. Suspense 구조 유지 (또는 세분화 고려)\\n\\n현재 구조:\\nSuspense fallback={<InvoiceViewerSkeleton />}\\n\\n변경 후:\\nSuspense fallback={<InvoiceViewerSkeleton />} (신규 컴포넌트 사용)",
+      "notes": "- 기존 InvoiceViewerSkeleton 함수를 컴포넌트 파일로 분리\\n- Suspense는 현재 1개 경계 유지 (streaming 복잡도 최소화)\\n- 향후 필요시 헤더/항목/합계별 Suspense 분리 가능",
       "status": "pending",
       "dependencies": [
         {
-          "taskId": "40c0641a-35c0-4c78-ad35-c95769ee60e2"
+          "taskId": "a524e68d-1ed6-4a99-9589-62a4754a2253"
         }
       ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
+      "createdAt": "2026-02-21T02:29:05.218Z",
+      "updatedAt": "2026-02-21T02:29:05.218Z",
       "relatedFiles": [
         {
-          "path": "src/app/api/invoice/[shareId]/pdf/route.ts",
+          "path": "src/app/invoice/[shareId]/page.tsx",
           "type": "TO_MODIFY",
-          "description": "PDF 생성 API"
+          "description": "InvoiceViewerSkeleton 함수 제거, import 추가",
+          "lineStart": 71,
+          "lineEnd": 150
         },
         {
-          "path": "src/components/invoice/invoice-pdf-document.tsx",
+          "path": "src/components/invoice/InvoiceSkeleton.tsx",
           "type": "REFERENCE",
-          "description": "PDF 문서 컴포넌트"
+          "description": "신규 InvoiceViewerSkeleton import"
         }
       ],
-      "implementationGuide": "1. src/app/api/invoice/[shareId]/pdf/route.ts 검토\n2. Node.js Runtime 명시: export const runtime = 'nodejs'\n3. GET /api/invoice/[shareId]/pdf → application/pdf 응답 확인\n4. PDF 파일명: `견적서_[클라이언트명]_[날짜].pdf` 형식 설정\n5. Content-Disposition 헤더로 다운로드 트리거\n6. PDF 생성 시간 측정 (목표: 3초 이내)\n7. 오류 처리: shareId 없음, Notion 데이터 없음 등",
-      "verificationCriteria": "GET /api/invoice/[shareId]/pdf 호출 시 3초 이내 PDF 파일 다운로드, 파일명 한글 정상 인코딩",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
+      "implementationGuide": "1. src/app/invoice/[shareId]/page.tsx 열기\\n2. InvoiceViewerSkeleton 함수 정의 부분(71~end) 제거\\n3. 상단 import에 추가:\\n   import { InvoiceViewerSkeleton } from '@/components/invoice/InvoiceSkeleton'\\n4. Suspense fallback 유지\\n5. 테스트: 공개 페이지 접속 시 스켈레톤 표시 확인",
+      "verificationCriteria": "1. 공개 페이지 코드에서 inline InvoiceViewerSkeleton 함수 제거\\n2. import { InvoiceViewerSkeleton } from '@/components/invoice/InvoiceSkeleton' 추가\\n3. npm run dev 후 공개 페이지 접속\\n4. 로딩 중 스켈레톤 표시 확인\\n5. 로딩 완료 후 InvoiceViewer 정상 렌더링",
+      "analysisResult": "Phase 1: 견적서 상세 조회 성능 최적화 (ROADMAP.md 기준)\\\\n\\\\n목표: Lighthouse Performance 74→90+, Notion API 호출 60% 감소, 체감 로딩시간 1초 이내\\\\n\\\\n현황: API 캐싱 부재, 스켈레톤 UI 부분적 구현, Suspense 구조 미흡\\\\n\\\\n전략:\\\\n- ISR 캐싱으로 Notion API 호출 감소\\\\n- 스켈레톤 세분화로 로딩 체감 개선\\\\n- Suspense 경계 최적화\\\\n\\\\n기간: 3일 (2026-02-24 ~ 2026-02-26)"
     },
     {
-      "id": "df45afa3-0c4d-4e5c-95cc-793343ec2931",
-      "name": "Stage 4-4: PDF 다운로드 클라이언트 컴포넌트",
-      "description": "InvoiceActions.tsx PDF 다운로드 로직 구현, 로딩 상태 표시, Toast 알림",
-      "notes": "PDF 다운로드는 GET 요청. Content-Disposition 헤더로 브라우저 다운로드 트리거",
+      "id": "ea3b8a5e-8d46-4310-a94c-06b3e4532642",
+      "name": "Task C: 대시보드 페이지 Suspense 구조 검증 및 문서화",
+      "description": "현재 대시보드 페이지(/dashboard)의 Suspense 구조가 이미 최적화되어 있는지 검증. DashboardSearchFilter는 Suspense 외부에, InvoiceTableBody는 Suspense 내부에 있는지 확인.\\n\\n현황 분석:\\n- Line 321~323: DashboardSearchFilter (검색/필터) - Suspense 외부\\n- Line 393~395: Suspense { InvoiceTableBody } - 테이블 로딩\\n\\n결론: 이미 최적화되어 있음 ✅\\n\\n작업:\\n1. 코드 검증만 수행\\n2. 주석으로 의도 명확히\\n3. 문서화",
+      "notes": "- 검색/필터는 로딩 중에도 즉시 반응 가능\\n- 테이블 데이터만 Suspense로 감싸짐 (UX 개선)\\n- 현재 구조가 최적이므로 변경 불필요\\n- 향후 동적 검색 추가 시 고려 대상",
       "status": "pending",
       "dependencies": [
         {
-          "taskId": "069e5eec-ddc5-4817-b37c-24fecc375f25"
+          "taskId": "d1593e1a-a176-4f39-9ca7-6a1a9ad77adf"
         },
         {
-          "taskId": "3ccdf87d-3378-43be-a208-b553e383d3d9"
+          "taskId": "f81c4626-2e18-47e9-b53d-5da44adfe8e5"
+        },
+        {
+          "taskId": "a524e68d-1ed6-4a99-9589-62a4754a2253"
         }
       ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
+      "createdAt": "2026-02-21T02:29:05.218Z",
+      "updatedAt": "2026-02-21T02:29:05.218Z",
       "relatedFiles": [
         {
-          "path": "src/components/invoice/InvoiceActions.tsx",
-          "type": "TO_MODIFY",
-          "description": "액션 버튼 컴포넌트"
-        }
-      ],
-      "implementationGuide": "1. src/components/invoice/InvoiceActions.tsx에 PDF 다운로드 로직 추가\n2. <a href={pdfUrl} download> 방식 또는 fetch → Blob 방식 구현\n3. 로딩 상태 표시 (Lucide Loader2 스피너)\n4. 완료/실패 Toast 알림\n5. 관리자/공개 페이지에서 조건부로 PDF 버튼 활성화\n6. 버튼 클릭 시 /api/invoice/[shareId]/pdf 호출",
-      "verificationCriteria": "PDF 다운로드 버튼 클릭 시 3초 이내 파일 다운로드, 로딩 상태 표시, Toast 알림 표시",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
-    },
-    {
-      "id": "d56630a8-b34a-4a8e-881c-a45b69f41aec",
-      "name": "Stage 5-1: 통합 테스트 및 에러 처리",
-      "description": "관리자/클라이언트 전체 플로우 E2E 테스트, 에러 처리 강화, 보안 점검, 성능 확인",
-      "notes": "Playwright MCP 사용하여 E2E 테스트 자동화 가능. 브라우저 개발자 도구에서 API 키 검색으로 노출 여부 확인",
-      "status": "pending",
-      "dependencies": [
-        {
-          "taskId": "7f147ba7-8e6b-4758-bbfe-79ce591d9954"
-        },
-        {
-          "taskId": "df45afa3-0c4d-4e5c-95cc-793343ec2931"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
-      "relatedFiles": [
-        {
-          "path": "src/app/error.tsx",
-          "type": "CREATE",
-          "description": "전역 에러 페이지"
-        },
-        {
-          "path": "src/app/not-found.tsx",
-          "type": "TO_MODIFY",
-          "description": "전역 404 페이지"
-        }
-      ],
-      "implementationGuide": "1. 관리자 플로우: 로그인 → 대시보드 → 공유 링크 복사 → PDF 다운로드 → 로그아웃\n2. 클라이언트 플로우: 공유 URL 접속 → 견적서 확인 → PDF 다운로드\n3. src/app/error.tsx 전역 에러 페이지 구현\n4. src/app/not-found.tsx 전역 404 페이지 구현\n5. API 오류 시나리오별 에러 메시지 검증\n6. NOTION_API_KEY 클라이언트 번들 미노출 확인\n7. Lighthouse Performance 점수 80 이상 목표\n8. npm run build 빌드 오류 0건, npm run lint 경고/에러 0건",
-      "verificationCriteria": "npm run build 빌드 오류 0건, Lighthouse Performance 80 이상, 관리자/클라이언트 전체 플로우 오류 없음",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
-    },
-    {
-      "id": "2e228aa1-2c69-4687-b145-4f96efdc7e13",
-      "name": "Stage 5-2: 배포 및 문서화",
-      "description": "GitHub 리포지토리 생성, Vercel 배포, 프로덕션 검증, 사용자 가이드 문서 작성",
-      "notes": "NEXT_PUBLIC_APP_URL이 잘못되면 공유 링크 도메인이 틀림. 배포 전 체크리스트 확인 필수",
-      "status": "pending",
-      "dependencies": [
-        {
-          "taskId": "d56630a8-b34a-4a8e-881c-a45b69f41aec"
-        }
-      ],
-      "createdAt": "2026-02-17T22:59:58.912Z",
-      "updatedAt": "2026-02-17T22:59:58.912Z",
-      "relatedFiles": [
-        {
-          "path": "docs/USER_GUIDE.md",
-          "type": "CREATE",
-          "description": "사용자 가이드"
-        },
-        {
-          "path": ".gitignore",
-          "type": "TO_MODIFY",
-          "description": ".env.local 제외 확인"
-        },
-        {
-          "path": ".env.local.example",
+          "path": "src/app/dashboard/page.tsx",
           "type": "REFERENCE",
-          "description": "환경 변수 예제"
+          "description": "Suspense 구조 검증",
+          "lineStart": 321,
+          "lineEnd": 395
         }
       ],
-      "implementationGuide": "1. GitHub 리포지토리 생성 및 코드 푸시\n2. .env.local .gitignore 포함 확인\n3. 민감 정보 하드코딩 여부 최종 확인\n4. Vercel 프로젝트 생성 (GitHub 연동)\n5. Vercel 환경 변수 설정 (NOTION_API_KEY, NOTION_DATABASE_ID, Supabase 키 등)\n6. NEXT_PUBLIC_APP_URL을 실제 배포 도메인으로 설정\n7. git push → Vercel 자동 빌드/배포\n8. 배포된 URL에서 전체 플로우 재테스트\n9. docs/USER_GUIDE.md 작성: Notion 설정, API 키 발급, 서비스 사용 방법\n10. Vercel Analytics, Speed Insights 활성화",
-      "verificationCriteria": "Vercel 프로덕션 URL에서 모든 기능 정상 작동, 공유 링크가 실제 배포 도메인 사용, docs/USER_GUIDE.md 작성 완료",
-      "analysisResult": "Invoice Web MVP - Notion 데이터베이스 기반 견적서 웹 서비스. 5개 Stage로 구성: Stage 1(환경 설정), Stage 2(공통 모듈), Stage 3(핵심 기능), Stage 4(PDF 기능), Stage 5(배포). 총 14일 + 버퍼로 2026-03-09 완료 목표. 현재 코드 대부분 완료 상태로 검증 및 통합 단계. 주요 위험: woff2 폰트 PDF 미지원(필수 해결), @notionhq/client v5 API 변경 확인."
+      "implementationGuide": "1. src/app/dashboard/page.tsx 열기\\n2. Line 321~323 검색 필터 영역 확인\\n3. Line 393~395 Suspense 경계 확인\\n4. 두 영역이 분리되어 있음을 확인\\n5. 주석 추가:\\n   // DashboardSearchFilter는 Suspense 외부 (검색 필터는 즉시 표시)\\n   // InvoiceTableBody는 Suspense 내부 (데이터 로딩 중 skeleton 표시)\\n6. 변경 없음 (이미 최적화)",
+      "verificationCriteria": "1. 대시보드 페이지 코드 리뷰\\n2. DashboardSearchFilter와 Suspense가 분리되어 있음 확인\\n3. 주석 추가로 의도 명확화\\n4. 변경 없음 (이미 최적화)\\n5. Lighthouse 성능 측정 (Task 완료 후)",
+      "analysisResult": "Phase 1: 견적서 상세 조회 성능 최적화 (ROADMAP.md 기준)\\\\n\\\\n목표: Lighthouse Performance 74→90+, Notion API 호출 60% 감소, 체감 로딩시간 1초 이내\\\\n\\\\n현황: API 캐싱 부재, 스켈레톤 UI 부분적 구현, Suspense 구조 미흡\\\\n\\\\n전략:\\\\n- ISR 캐싱으로 Notion API 호출 감소\\\\n- 스켈레톤 세분화로 로딩 체감 개선\\\\n- Suspense 경계 최적화\\\\n\\\\n기간: 3일 (2026-02-24 ~ 2026-02-26)"
     }
   ]
 }

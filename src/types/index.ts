@@ -75,18 +75,54 @@ export type InvoiceSummary = Omit<Invoice, 'items' | 'notes'>
  * @property notionPageId - Notion 페이지 ID (unique)
  * @property shareId - 공개 공유 링크용 고유 ID (nanoid, unique)
  * @property createdAt - 생성 일시 (ISO 8601)
+ * @property viewCount - 총 조회 횟수 (Post-MVP Phase 2)
+ * @property firstViewedAt - 첫 조회 일시 (Post-MVP Phase 2)
+ * @property lastViewedAt - 최근 조회 일시 (Post-MVP Phase 2)
  */
 export interface ShareLink {
   id: string
   notionPageId: string
   shareId: string
   createdAt: string
+  viewCount?: number
+  firstViewedAt?: string | null
+  lastViewedAt?: string | null
 }
 
 /**
  * ShareLink 생성 요청 데이터
  */
 export type ShareLinkCreateInput = Pick<ShareLink, 'notionPageId'>
+
+/**
+ * 공개 견적서 페이지 조회 기록 (Post-MVP Phase 2)
+ *
+ * @property id - UUID
+ * @property shareId - 공유 링크 ID
+ * @property viewedAt - 조회 일시
+ * @property viewerIp - 조회자 IP (선택)
+ * @property userAgent - 조회자 User-Agent (선택)
+ */
+export interface InvoiceView {
+  id: string
+  shareId: string
+  viewedAt: string
+  viewerIp?: string
+  userAgent?: string
+}
+
+/**
+ * 견적서 조회 통계 (Post-MVP Phase 2)
+ *
+ * @property viewCount - 총 조회 횟수
+ * @property firstViewedAt - 첫 조회 일시
+ * @property lastViewedAt - 최근 조회 일시
+ */
+export interface ViewStats {
+  viewCount: number
+  firstViewedAt?: string
+  lastViewedAt?: string
+}
 
 // ============================================================
 // API 응답 타입

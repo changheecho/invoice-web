@@ -157,7 +157,7 @@ export function InvoiceViewer({
         // 기본 레이아웃
         'flex flex-col w-full max-w-4xl mx-auto',
         // 배경 및 텍스트 색상
-        'bg-white',
+        'bg-white dark:bg-slate-900',
         // 테두리 및 둥근 모서리
         'border border-border rounded-xl',
         // 그림자
@@ -172,7 +172,7 @@ export function InvoiceViewer({
         className={cn(
           'flex flex-col sm:flex-row sm:items-start sm:justify-between',
           'gap-4 px-6 py-8 sm:px-10',
-          'border-b border-border'
+          'border-b border-border dark:border-slate-700'
         )}
       >
         {/* 좌측: 회사 로고 영역 + 회사명 */}
@@ -264,7 +264,7 @@ export function InvoiceViewer({
           <dl
             className={cn(
               'grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6',
-              'rounded-lg bg-muted/40 dark:bg-muted/20 px-5 py-4'
+              'rounded-lg bg-muted/40 dark:bg-slate-800 px-5 py-4'
             )}
           >
             {/* 견적 번호 */}
@@ -325,10 +325,10 @@ export function InvoiceViewer({
           </h2>
 
           {/* 테이블 래퍼: 모바일에서 수평 스크롤 */}
-          <div className="rounded-lg border border-border overflow-hidden">
+          <div className="rounded-lg border border-border dark:border-slate-700 overflow-hidden">
             <Table aria-label="견적서 항목 목록">
               <TableHeader>
-                <TableRow className="bg-muted/40 dark:bg-muted/20 hover:bg-muted/40">
+                <TableRow className="bg-muted/40 dark:bg-slate-800 hover:bg-muted/40 dark:hover:bg-slate-800">
                   {/* 항목명: flex-grow */}
                   <TableHead className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider w-[40%]">
                     항목명
@@ -355,7 +355,7 @@ export function InvoiceViewer({
                       key={index}
                       className={cn(
                         // 홀수 행 줄무늬 배경
-                        index % 2 === 1 && 'bg-muted/20 dark:bg-muted/10'
+                        index % 2 === 1 && 'bg-muted/20 dark:bg-slate-800/50'
                       )}
                     >
                       {/* 항목명 */}
@@ -393,7 +393,7 @@ export function InvoiceViewer({
               {invoice.items.length > 0 && (
                 <TableFooter>
                   {/* 소계 행 */}
-                  <TableRow className="bg-muted/30 dark:bg-muted/15 hover:bg-muted/30">
+                  <TableRow className="bg-muted/30 dark:bg-slate-800 hover:bg-muted/30 dark:hover:bg-slate-800">
                     <TableCell
                       colSpan={3}
                       className="px-4 py-2.5 text-sm text-right text-muted-foreground font-medium"
@@ -473,8 +473,8 @@ export function InvoiceViewer({
             <div
               className={cn(
                 'rounded-lg px-4 py-3',
-                'bg-muted/40 dark:bg-muted/20',
-                'border border-border'
+                'bg-muted/40 dark:bg-slate-800',
+                'border border-border dark:border-slate-700'
               )}
             >
               <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
@@ -502,8 +502,8 @@ export function InvoiceViewer({
         className={cn(
           'flex flex-col sm:flex-row sm:items-center sm:justify-between',
           'gap-2 px-6 py-5 sm:px-10',
-          'border-t border-border',
-          'bg-muted/20 dark:bg-muted/10',
+          'border-t border-border dark:border-slate-700',
+          'bg-muted/20 dark:bg-slate-800/50',
           'rounded-b-xl'
         )}
       >

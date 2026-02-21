@@ -1,11 +1,17 @@
 /**
- * 견적서 PDF 문서 컴포넌트
+ * 견적서 PDF 문서 컴포넌트 (Post-MVP Phase 3 주석 추가)
  *
  * react-pdf/renderer를 사용하여 견적서 데이터를 PDF로 렌더링합니다.
  * 이 컴포넌트는 일반 React DOM이 아닌 PDF 렌더러용으로 작성되었습니다.
  *
  * @note react-pdf/renderer는 HTML/CSS가 아닌 자체 레이아웃 시스템을 사용합니다.
  *       Tailwind CSS, shadcn/ui 컴포넌트는 사용할 수 없습니다.
+ *
+ * ⚠️ 다크모드 미지원:
+ * react-pdf/renderer는 CSS 변수와 다크모드를 지원하지 않습니다.
+ * 따라서 PDF는 항상 라이트 모드 색상(흰색 배경, 검은색 텍스트)으로 생성됩니다.
+ * 다크모드를 사용하는 사용자가 PDF를 다운로드해도 라이트 배경으로 표시됩니다.
+ * 이는 react-pdf/renderer의 기술적 제약입니다.
  *
  * @reference https://react-pdf.org/
  */
@@ -69,19 +75,20 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 10,
-    color: '#6b7280',
+    color: '#374151',
   },
   headerRight: {
     alignItems: 'flex-end',
   },
   metaLabel: {
     fontSize: 8,
-    color: '#6b7280',
+    color: '#374151',
     marginBottom: 2,
   },
   metaValue: {
     fontSize: 10,
     marginBottom: 6,
+    color: '#111827',
   },
 
   // 상태 배지
@@ -102,7 +109,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 9,
-    color: '#6b7280',
+    color: '#374151',
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -154,7 +161,7 @@ const styles = StyleSheet.create({
   },
   tableHeaderText: {
     fontWeight: 'bold',
-    color: '#374151',
+    color: '#111827',
   },
 
   // 합계 섹션
@@ -172,7 +179,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
     paddingRight: 16,
-    color: '#6b7280',
+    color: '#374151',
   },
   totalValue: {
     minWidth: 80,

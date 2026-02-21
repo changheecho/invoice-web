@@ -13,13 +13,14 @@ import { Suspense } from 'react'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
-import { ChevronLeft } from 'lucide-react'
+import { ChevronLeft, Eye } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { transformToInvoice, extractItemIds } from '@/lib/notion/transform'
 import { getInvoiceItems } from '@/lib/notion/items'
-import { getOrCreateShareLink } from '@/lib/supabase/share-links'
+import { getOrCreateShareLink, getShareLinkByNotionId } from '@/lib/supabase/share-links'
 import { ROUTES, buildPdfFilename } from '@/lib/constants'
 import { NOTION_API_KEY } from '@/lib/env'
 import { InvoiceViewer } from '@/components/invoice/InvoiceViewer'
@@ -248,6 +249,21 @@ export default async function DashboardInvoicePage(
     // ShareLink 생성 실패는 무시 (공유 버튼 비활성화로 처리됨)
   }
 
+  // Post-MVP Phase 2: 조회 통계 조회
+  let viewStats = null
+  try {
+    const stats = await getShareLinkByNotionId(id)
+    if (stats) {
+      viewStats = {
+        viewCount: stats.viewCount ?? 0,
+        firstViewedAt: stats.firstViewedAt,
+        lastViewedAt: stats.lastViewedAt,
+      }
+    }
+  } catch {
+    // 조회 통계 조회 실패는 무시
+  }
+
   // PDF 파일명 및 공유 URL 생성
   const pdfFileName = buildPdfFilename(invoice.clientName, invoice.invoiceDate)
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? ''
@@ -317,6 +333,52 @@ export default async function DashboardInvoicePage(
             }
           />
         </Suspense>
+
+        {/* ────────────────────────────────────
+            Post-MVP Phase 2: 조회 통계 섹션
+        ──────────────────────────────────── */}
+        {viewStats && (
+          <Card className="mt-8 p-6 border border-border">
+            <div className="flex items-center gap-2 mb-4">
+              <Eye className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
+              <h2 className="text-lg font-semibold text-foreground">조회 현황</h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* 총 조회 횟수 */}
+              <div className="flex flex-col gap-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  총 조회 횟수
+                </p>
+                <p className="text-2xl font-bold text-foreground">{viewStats.viewCount}</p>
+              </div>
+
+              {/* 첫 조회 일시 */}
+              <div className="flex flex-col gap-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  첫 조회
+                </p>
+                <p className="text-sm text-foreground">
+                  {viewStats.firstViewedAt
+                    ? new Date(viewStats.firstViewedAt).toLocaleString('ko-KR')
+                    : '아직 조회되지 않음'}
+                </p>
+              </div>
+
+              {/* 최근 조회 일시 */}
+              <div className="flex flex-col gap-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  최근 조회
+                </p>
+                <p className="text-sm text-foreground">
+                  {viewStats.lastViewedAt
+                    ? new Date(viewStats.lastViewedAt).toLocaleString('ko-KR')
+                    : '아직 조회되지 않음'}
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
 
       </div>
     </div>

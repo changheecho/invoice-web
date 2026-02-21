@@ -109,5 +109,38 @@ function mapShareLink(record: Record<string, unknown>): ShareLink {
     notionPageId: String(record['notion_page_id']),
     shareId: String(record['share_id']),
     createdAt: String(record['created_at']),
+    viewCount: record['view_count'] ? Number(record['view_count']) : undefined,
+    firstViewedAt: record['first_viewed_at'] ? String(record['first_viewed_at']) : undefined,
+    lastViewedAt: record['last_viewed_at'] ? String(record['last_viewed_at']) : undefined,
   }
+}
+
+/**
+ * notionPageId로 share_link와 조회 통계를 조회합니다. (Post-MVP Phase 2)
+ *
+ * @param notionPageId - Notion 페이지 ID
+ * @returns ShareLink 객체 (viewCount, first/last_viewed_at 포함) 또는 null
+ * @throws Supabase 쿼리 에러 발생 시 예외 throw
+ *
+ * @example
+ * const shareLink = await getShareLinkByNotionId('abc123...')
+ * // { shareId: 'xyz789', viewCount: 5, lastViewedAt: '2026-02-21T...' }
+ */
+export async function getShareLinkByNotionId(notionPageId: string): Promise<ShareLink | null> {
+  const supabase = await createServerClient()
+
+  const { data, error } = await supabase
+    .from('share_links')
+    .select('*')
+    .eq('notion_page_id', notionPageId)
+    .single()
+
+  // 결과 없음 (PGRST116)은 null 반환
+  if (error?.code === 'PGRST116') return null
+
+  if (error) {
+    throw new Error(`ShareLink 조회 실패: ${error.message}`)
+  }
+
+  return data ? mapShareLink(data) : null
 }
