@@ -75,14 +75,14 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 10,
-    color: '#374151',
+    color: '#ffffff',
   },
   headerRight: {
     alignItems: 'flex-end',
   },
   metaLabel: {
     fontSize: 8,
-    color: '#374151',
+    color: '#ffffff',
     marginBottom: 2,
   },
   metaValue: {
@@ -109,7 +109,7 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 9,
-    color: '#374151',
+    color: '#ffffff',
     marginBottom: 4,
     textTransform: 'uppercase',
     letterSpacing: 1,
@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
     paddingRight: 16,
-    color: '#374151',
+    color: '#ffffff',
   },
   totalValue: {
     minWidth: 80,
