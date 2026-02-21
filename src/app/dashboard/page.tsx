@@ -10,7 +10,7 @@
 import { Suspense } from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { RotateCw, FileText, Inbox } from 'lucide-react'
+import { RotateCw, FileText, Inbox, Copy, ChevronRight } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -22,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { InvoiceStatusBadge } from '@/components/invoice/InvoiceStatusBadge'
+import { InvoiceViewStatusBadge } from '@/components/invoice/InvoiceViewStatusBadge'
 import { InvoiceTableSkeleton } from '@/components/invoice/InvoiceSkeleton'
 import { DashboardSearchFilter } from './components/DashboardSearchFilter'
 import { ROUTES } from '@/lib/constants'
@@ -286,7 +287,7 @@ const InvoiceTableBody = async () => {
         return {
           invoice,
           viewCount: shareLink?.viewCount ?? 0,
-          lastViewedAt: shareLink?.lastViewedAt,
+          lastViewedAt: shareLink?.lastViewedAt ?? undefined,
         }
       } catch (error) {
         console.warn(`[대시보드] view_count 조회 실패 (invoiceId=${invoice.id}):`, error)
