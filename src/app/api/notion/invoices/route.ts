@@ -6,8 +6,18 @@
  *
  * @security 이 엔드포인트는 서버에서 NOTION_API_KEY를 사용합니다.
  *           클라이언트에 API 키가 노출되지 않습니다.
+ *
+ * @cache ISR 방식으로 60초마다 Notion 데이터를 재검증합니다.
+ *        60초 이내 동일 요청은 캐시 응답을 반환하여 Notion API 호출을 절감합니다.
  */
 import { NextResponse } from 'next/server'
+
+/**
+ * Next.js Route Segment Config - ISR 캐싱 설정
+ * revalidate: 60초마다 백그라운드에서 Notion API를 재호출하여 캐시를 갱신합니다.
+ * 관리자 목록 페이지는 60초 캐시 적용 (자주 변경될 수 있으므로 짧게 설정)
+ */
+export const revalidate = 60
 import { transformToInvoiceSummary } from '@/lib/notion/transform'
 import { NOTION_DATABASE_ID, validateEnv } from '@/lib/env'
 import { createServerClient } from '@/lib/supabase/server'
@@ -81,6 +91,9 @@ export async function GET() {
             },
           ],
         }),
+        // ISR 캐싱: Next.js가 POST fetch를 60초간 캐시합니다.
+        // 60초 이내 동일 요청 시 Notion API를 재호출하지 않습니다.
+        next: { revalidate: 60 },
       }
     )
 

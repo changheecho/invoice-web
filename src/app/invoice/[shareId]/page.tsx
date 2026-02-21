@@ -19,7 +19,9 @@ import { buildPdfFilename } from '@/lib/constants'
 import { NOTION_API_KEY } from '@/lib/env'
 import { InvoiceViewer } from '@/components/invoice/InvoiceViewer'
 import { InvoiceActionsWrapper } from '@/components/invoice/InvoiceActionsWrapper'
-import { Skeleton } from '@/components/ui/skeleton'
+import { InvoiceHeaderSkeleton } from '@/components/invoice/InvoiceHeaderSkeleton'
+import { InvoiceItemsSkeleton } from '@/components/invoice/InvoiceItemsSkeleton'
+import { InvoiceSummarySkeleton } from '@/components/invoice/InvoiceSummarySkeleton'
 import type { PageObjectResponse } from '@notionhq/client/build/src/api-endpoints'
 
 /**
@@ -40,6 +42,9 @@ export async function generateMetadata(
         'Authorization': `Bearer ${NOTION_API_KEY}`,
         'Notion-Version': '2022-06-28',
       },
+      // ISR 캐싱: 공개 견적서 메타데이터는 300초(5분)마다 재검증합니다.
+      // 공개 페이지는 수정 빈도가 낮으므로 관리자 페이지보다 긴 캐시 시간을 적용합니다.
+      next: { revalidate: 300 },
     })
 
     if (!response.ok) throw new Error('Notion API 오류')
@@ -66,7 +71,13 @@ export async function generateMetadata(
 
 /**
  * 견적서 뷰어 로딩 스켈레톤
- * InvoiceViewer가 로딩될 때 동일한 레이아웃 구조로 표시됩니다.
+ *
+ * 세 영역별 스켈레톤 컴포넌트를 조합하여 InvoiceViewer와 동일한 레이아웃을 제공합니다:
+ * - InvoiceHeaderSkeleton: 헤더 + 발신/수신 영역
+ * - InvoiceItemsSkeleton: 메타 정보 + 항목 테이블 영역
+ * - InvoiceSummarySkeleton: 총액 + 액션 버튼 + 푸터 영역
+ *
+ * 각 영역이 독립적으로 관리되어 향후 Suspense 경계를 세분화할 때 재사용 가능합니다.
  */
 function InvoiceViewerSkeleton() {
   return (
@@ -75,83 +86,17 @@ function InvoiceViewerSkeleton() {
       aria-label="견적서 로딩 중"
       className="w-full bg-white dark:bg-slate-950 border border-border rounded-xl shadow-sm overflow-hidden"
     >
-      {/* 헤더 스켈레톤 */}
-      <div className="flex items-start justify-between gap-4 px-6 py-8 sm:px-10 border-b border-border">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-12 w-12 rounded-lg" />
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-5 w-32" />
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-2">
-          <Skeleton className="h-7 w-20" />
-          <Skeleton className="h-4 w-28" />
-        </div>
+      {/* 헤더 + 발신/수신 정보 영역 스켈레톤 */}
+      <InvoiceHeaderSkeleton />
+
+      {/* 메타 정보 + 항목 테이블 영역 스켈레톤 */}
+      <div className="pt-8 pb-0">
+        <InvoiceItemsSkeleton rows={3} />
       </div>
 
-      {/* 발신/수신 스켈레톤 */}
-      <div className="px-6 py-8 sm:px-10 flex flex-col gap-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="flex flex-col gap-2">
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="h-5 w-36" />
-            <Skeleton className="h-4 w-48" />
-          </div>
-          <div className="flex flex-col gap-2 sm:items-end">
-            <Skeleton className="h-3 w-12" />
-            <Skeleton className="h-5 w-32" />
-          </div>
-        </div>
-
-        {/* 구분선 */}
-        <Skeleton className="h-px w-full" />
-
-        {/* 메타 정보 스켈레톤 */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 rounded-lg bg-muted/40 px-5 py-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-2">
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-4 w-24" />
-            </div>
-          ))}
-        </div>
-
-        {/* 테이블 스켈레톤 */}
-        <div className="rounded-lg border border-border overflow-hidden">
-          <div className="bg-muted/40 px-4 py-3">
-            <div className="grid grid-cols-4 gap-4">
-              {['항목명', '수량', '단가', '소계'].map((col) => (
-                <Skeleton key={col} className="h-3 w-12" />
-              ))}
-            </div>
-          </div>
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="grid grid-cols-4 gap-4 px-4 py-3 border-t border-border">
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-8 ml-auto" />
-              <Skeleton className="h-4 w-20 ml-auto" />
-              <Skeleton className="h-4 w-20 ml-auto" />
-            </div>
-          ))}
-        </div>
-
-        {/* 총 금액 스켈레톤 */}
-        <div className="flex justify-end">
-          <div className="flex flex-col gap-2 min-w-[240px]">
-            <Skeleton className="h-px w-full" />
-            <div className="flex justify-between pt-1">
-              <Skeleton className="h-5 w-16" />
-              <Skeleton className="h-6 w-28" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* 푸터 스켈레톤 */}
-      <div className="flex justify-between items-center px-6 py-5 sm:px-10 border-t border-border bg-muted/20">
-        <Skeleton className="h-4 w-52" />
-        <Skeleton className="h-3 w-36" />
+      {/* 총액 + 액션 버튼 + 푸터 영역 스켈레톤 */}
+      <div className="pb-0">
+        <InvoiceSummarySkeleton showActions={true} />
       </div>
     </div>
   )
@@ -190,6 +135,9 @@ export default async function PublicInvoicePage(
         'Authorization': `Bearer ${NOTION_API_KEY}`,
         'Notion-Version': '2022-06-28',
       },
+      // ISR 캐싱: 공개 견적서 페이지는 300초(5분)마다 Notion 데이터를 재검증합니다.
+      // 클라이언트가 접근하는 공개 페이지는 수정 빈도가 낮으므로 긴 캐시 시간을 적용합니다.
+      next: { revalidate: 300 },
     })
 
     if (!response.ok) {

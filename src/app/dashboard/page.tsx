@@ -193,7 +193,17 @@ const EmptyState = () => (
 
 /**
  * 견적서 테이블 본체 컴포넌트
- * Notion 데이터베이스에서 실시간으로 견적서 목록을 조회합니다.
+ *
+ * Notion 데이터베이스에서 견적서 목록을 조회하여 TableBody를 렌더링합니다.
+ *
+ * 캐싱 전략:
+ * - `next: { revalidate: 60 }` 옵션으로 60초간 응답을 캐시합니다.
+ * - 60초 이내 동일 요청은 캐시 응답을 반환하여 Notion API 호출 횟수를 절감합니다.
+ *
+ * Suspense 연동:
+ * - 이 컴포넌트는 Suspense 경계 내부에서 렌더링됩니다.
+ * - 데이터 로딩 중에는 InvoiceTableSkeleton이 표시됩니다.
+ * - DashboardSearchFilter는 Suspense 외부에 있으므로 즉시 표시됩니다.
  */
 const InvoiceTableBody = async () => {
   // 데이터 조회를 try/catch로 감싸고, JSX 구성은 외부에서 처리
@@ -221,6 +231,9 @@ const InvoiceTableBody = async () => {
             },
           ],
         }),
+        // ISR 캐싱: 관리자 대시보드 목록은 60초마다 Notion 데이터를 재검증합니다.
+        // 60초 이내 동일 요청은 캐시 응답을 반환하여 Notion API 호출 횟수를 절감합니다.
+        next: { revalidate: 60 },
       }
     )
 
@@ -317,6 +330,8 @@ export default async function DashboardPage(_props: DashboardPageProps) {
 
       {/* ====================================================
           검색 및 필터 영역
+          - Suspense 경계 외부에 배치하여 데이터 로딩 중에도 즉시 표시됩니다.
+          - 사용자는 Notion 데이터를 기다리는 동안 검색/필터 UI를 즉시 사용 가능합니다.
           ==================================================== */}
       <div className="mb-6">
         <DashboardSearchFilter />
@@ -324,6 +339,9 @@ export default async function DashboardPage(_props: DashboardPageProps) {
 
       {/* ====================================================
           견적서 테이블 영역
+          - InvoiceTableBody는 Suspense 경계 내부에 배치하여 비동기 렌더링을 지원합니다.
+          - Notion API 응답 대기 중에는 InvoiceTableSkeleton이 표시됩니다.
+          - DashboardSearchFilter가 외부에 있으므로 검색 UI는 로딩 중에도 즉시 표시됩니다.
           ==================================================== */}
       <div
         className={cn(

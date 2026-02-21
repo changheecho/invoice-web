@@ -192,6 +192,9 @@ export default async function DashboardInvoicePage(
         'Authorization': `Bearer ${NOTION_API_KEY}`,
         'Notion-Version': '2022-06-28',
       },
+      // ISR 캐싱: 관리자 상세 페이지는 60초마다 Notion 데이터를 재검증합니다.
+      // 견적서가 자주 수정될 수 있으므로 60초로 설정합니다.
+      next: { revalidate: 60 },
     })
 
     if (!response.ok) {
